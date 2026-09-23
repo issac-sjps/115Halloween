@@ -63,7 +63,7 @@
   /* ---------- 說明浮動視窗 ---------- */
   #story-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: min(94vw, 800px); max-height: 80vh; overflow-y: auto;
+    width: min(94vw, 750px); max-height: 80vh; overflow-y: auto;
     background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
     padding: 3vh 4vw; z-index: 40; box-shadow: 0 10px 50px #000e;
   }
@@ -105,8 +105,8 @@
     text-align: center; margin: 0.4vh 0 1.4vh; font-weight: bold;
     padding: 0.8vh 20px; border-radius: 10px; display: inline-block;
   }
-  #color-clue .clue-en { font-size: clamp(12px, 1.8vh, 16px); opacity: 0.85; margin-bottom: 0.2vh; }
-  #color-clue .clue-zh { font-size: clamp(14px, 2.2vh, 20px); }
+  #color-clue .clue-en { font-size: clamp(16px, 2.6vh, 24px); margin-bottom: 0.3vh; }
+  #color-clue .clue-zh { font-size: clamp(12px, 1.7vh, 15px); opacity: 0.8; }
   .clue-red { background: #4a1010; color: #ff6b6b; border: 2px solid #ff6b6b; }
   .clue-yellow { background: #4a3d10; color: #ffe066; border: 2px solid #ffe066; }
   .clue-blue { background: #10304a; color: #66c7ff; border: 2px solid #66c7ff; }
@@ -452,12 +452,15 @@ function typeStory(text, onDone) {
   const box = document.getElementById("story-box");
   box.innerHTML = "";
   let i = 0;
-  const speed = 23;
+  const zhSpeed = 23; // 中文（及其他符號）逐字間隔
+  const enSpeed = 12; // 英文逐字母間隔（約中文的 2 倍速）
   function step() {
     if (i <= text.length) {
       box.innerHTML = text.slice(0, i).replace(/\n/g, "<br>") + '<span id="story-cursor">▍</span>';
+      const nextCh = text[i];
+      const delay = nextCh && /[a-zA-Z]/.test(nextCh) ? enSpeed : zhSpeed;
       i++;
-      storyTimeoutId = setTimeout(step, speed);
+      storyTimeoutId = setTimeout(step, delay);
     } else if (onDone) {
       onDone();
     }
