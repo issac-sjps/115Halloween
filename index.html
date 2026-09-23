@@ -6,11 +6,6 @@
 <style>
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
   html, body { -webkit-touch-callout: none; }
-  #fullscreen-btn {
-    margin-top: 10px; font-size: 15px; padding: 8px 20px; background: #241b30;
-    border: 1px solid #4a3d5c; color: #f0e6d2; border-radius: 8px; cursor: pointer;
-  }
-  #fullscreen-btn:hover { border-color: #ff8c2b; }
   body {
     margin: 0;
     font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
@@ -34,25 +29,69 @@
   #room-screen > *:not(.bg-video) { position: relative; z-index: 1; }
   #end-screen { z-index: 3; }
 
-  .back-btn, .reset-btn {
-    position: absolute; top: 1.5vh; background: #1c1c28cc; border: 1px solid #4a3d5c;
+  #fullscreen-btn, #settings-btn {
+    position: fixed; top: 1.5vh; background: #1c1c28cc; border: 1px solid #4a3d5c;
     color: #f0e6d2; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
-    z-index: 5;
+    z-index: 25;
   }
-  .reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .back-btn { left: 12px; }
-  .reset-btn { right: 12px; }
+  #fullscreen-btn { left: 12px; }
+  #settings-btn { right: 12px; }
 
+  /* ---------- 設定浮動視窗 ---------- */
+  #settings-panel {
+    position: fixed; top: 6vh; right: 2vw; width: min(88vw, 320px);
+    background: #17121ee6; border: 1px solid #4a3d5c; border-radius: 14px;
+    padding: 2.4vh 4vw; z-index: 26; box-shadow: 0 10px 40px #000c;
+  }
+  #settings-panel h3 { margin: 0 0 1.6vh; font-size: 16px; color: #ff8c2b; }
+  .settings-row { margin-bottom: 1.8vh; }
+  .settings-row label { display: block; font-size: 13px; margin-bottom: 0.6vh; color: #d8cbb6; }
+  #volume-slider { width: 100%; }
+  #volume-value { font-size: 12px; color: #b8afa0; }
+  .settings-btn-full {
+    width: 100%; padding: 8px 0; margin-top: 0.6vh; font-size: 13px;
+    border-radius: 8px; border: 1px solid #4a3d5c; background: #241b30;
+    color: #f0e6d2; cursor: pointer;
+  }
+  #reset-request-btn { border-color: #ff8c2b; color: #ff8c2b; }
+  #reset-confirm-row p { font-size: 12px; color: #ffcc4d; margin: 1vh 0 0.8vh; text-align: center; }
+  #reset-confirm-row { display: flex; flex-direction: column; gap: 6px; }
+  #confirm-reset-btn { border-color: #ff5c5c; color: #ff5c5c; }
+  #settings-close-btn { margin-top: 1.4vh; opacity: 0.75; }
+
+  /* ---------- 說明浮動視窗 ---------- */
+  #story-panel {
+    position: fixed; top: 6vh; left: 50%; transform: translateX(-50%);
+    width: min(88vw, 560px); max-height: 70vh; overflow-y: auto;
+    background: #17121ee6; border: 1px solid #4a3d5c; border-radius: 14px;
+    padding: 3vh 4vw; z-index: 20; box-shadow: 0 10px 40px #000c;
+  }
   #story-box {
-    max-width: 720px; text-align: center;
-    font-size: clamp(14px, 2.4vh, 22px); line-height: 1.6; max-height: 34vh; overflow: hidden;
+    text-align: center;
+    font-size: clamp(14px, 2.2vh, 20px); line-height: 1.7;
   }
   #story-cursor { animation: blink 0.8s infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 
+  #story-confirm-btn {
+    display: block; margin: 2.2vh auto 0; padding: 10px 28px;
+    font-size: clamp(14px, 2vh, 17px); background: #ff8c2b; color: #1c1c28;
+    border: none; border-radius: 10px; cursor: pointer; font-weight: bold;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  #story-confirm-btn.ready { opacity: 1; pointer-events: auto; }
+  #story-confirm-btn:active { transform: scale(0.96); }
+
+  #story-mini-btn {
+    position: fixed; bottom: 2.5vh; right: 2vw; z-index: 20;
+    background: #1c1c28dd; border: 1px solid #4a3d5c; color: #f0e6d2;
+    border-radius: 50px; padding: 10px 18px; font-size: 14px; cursor: pointer;
+  }
+
   #countdown-hint {
+    position: fixed; top: 1.5vh; left: 50%; transform: translateX(-50%);
     text-align: center; font-size: clamp(13px, 2vh, 18px); color: #ffcc4d;
-    margin: 1vh 0; min-height: 2.4vh;
+    min-height: 2.4vh; z-index: 15;
   }
 
   #color-clue {
@@ -98,7 +137,7 @@
 
   #end-screen {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    text-align: center; font-size: clamp(18px, 3.4vh, 26px); background: #0d0d14ee;
+    text-align: center; font-size: clamp(18px, 3.4vh, 26px); background: #0d0d1499;
   }
   #end-screen.success { color: #7ee787; }
   #end-screen.fail { color: #ff5c5c; }
@@ -121,13 +160,31 @@
   <audio id="bgm" preload="auto" loop>
     <source src="https://issac-sjps.github.io/115Halloween/bgm.mp3" type="audio/mpeg">
   </audio>
-  <audio id="happy-ending-audio" preload="auto">
-    <source src="https://issac-sjps.github.io/115Halloween/HappyEnding.mp3" type="audio/mpeg">
-  </audio>
-  <button id="fullscreen-btn" class="back-btn" onclick="enterFullscreen()" style="position:absolute;">🖥️ 全螢幕</button>
-  <button id="reset-btn" class="reset-btn" onclick="resetRoom()">🔄 重置（請只按一次）</button>
 
-  <div id="story-box"></div>
+  <button id="fullscreen-btn" onclick="enterFullscreen()">🖥️ 全螢幕</button>
+  <button id="settings-btn" onclick="toggleSettings()">⚙️ 設定</button>
+
+  <div id="settings-panel" class="hidden">
+    <h3>⚙️ 設定</h3>
+    <div class="settings-row">
+      <label>🔊 音量（<span id="volume-value">100%</span>）</label>
+      <input type="range" id="volume-slider" min="0" max="300" value="100" oninput="setVolume(this.value)">
+    </div>
+    <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
+    <div id="reset-confirm-row" class="hidden">
+      <p>確定要重置嗎？目前進度將會清除。</p>
+      <button id="confirm-reset-btn" class="settings-btn-full" onclick="confirmReset()">✅ 確認重置</button>
+      <button class="settings-btn-full" onclick="cancelReset()">✖️ 取消</button>
+    </div>
+    <button id="settings-close-btn" class="settings-btn-full" onclick="toggleSettings()">關閉設定</button>
+  </div>
+
+  <div id="story-panel">
+    <div id="story-box"></div>
+    <button id="story-confirm-btn" onclick="storyButtonClick()">確認後開始</button>
+  </div>
+  <button id="story-mini-btn" class="hidden" onclick="toggleStoryPanel()">📜 查看說明</button>
+
   <div id="countdown-hint"></div>
 
   <div id="challenge-area" class="hidden">
@@ -146,18 +203,17 @@
 <script>
 /* ================= 教室設定區（老師可自行修改）================= */
 const ROOM = {
-    bg: "#0d0d14",
     story: "歡迎來到女巫的配藥室...\n架上擺滿了各色毒藥，每一瓶都散發著詭異的光。\n女巫留下一張古老的配方，藏著解開封印的密碼。\n5 分鐘內若不能找出正確的密碼，\n瓶中的毒氣將會瀰漫整間藥室...",
-    timeLimit: 300,
-    password: "0731"
+    timeLimit: 300
 };
-/* 四色密碼對照表 */
+/* 四色密碼對照表（四碼） */
 const COLOR_CODES = {
-  red:    { name: "紅色", code: "582", cls: "clue-red" },
-  yellow: { name: "黃色", code: "314", cls: "clue-yellow" },
-  blue:   { name: "藍色", code: "709", cls: "clue-blue" },
-  green:  { name: "綠色", code: "946", cls: "clue-green" }
+  red:    { name: "紅色", code: "3621", cls: "clue-red" },
+  yellow: { name: "黃色", code: "0932", cls: "clue-yellow" },
+  blue:   { name: "藍色", code: "5267", cls: "clue-blue" },
+  green:  { name: "綠色", code: "9453", cls: "clue-green" }
 };
+const BG_BASE = "https://issac-sjps.github.io/115Halloween/";
 /* ================================================================ */
 
 /* ================= 鎖定機制：禁右鍵 / 全螢幕 / 鍵盤白名單 ================= */
@@ -176,21 +232,21 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") return; // 讓瀏覽器處理離開全螢幕
   if (e.key >= "0" && e.key <= "9") {
     e.preventDefault();
-    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+    if (!document.getElementById("challenge-area").classList.contains("hidden")) {
       handleKey(e.key);
     }
     return;
   }
   if (e.key === "Enter") {
     e.preventDefault();
-    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+    if (!document.getElementById("challenge-area").classList.contains("hidden")) {
       handleKey("確認");
     }
     return;
   }
   if (e.key === "Backspace" || e.key === "Delete") {
     e.preventDefault();
-    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+    if (!document.getElementById("challenge-area").classList.contains("hidden")) {
       handleKey("清除");
     }
     return;
@@ -200,24 +256,39 @@ document.addEventListener("keydown", e => {
 /* ================================================================ */
 
 
-let currentRoom = ROOM;
 let currentColor = null;
 let timeLeft = 0;
 let timerInterval = null;
 let countdownInterval = null;
 let storyTimeoutId = null;
 let pwInput = "";
+let storyConfirmed = false;
+let resetGuard = false;
+
 let audioCtx = null;
+let bgmGainNode = null;
+let masterVolume = 1.0; // 100%
 const bgVideo = document.getElementById("bg-video");
 const bgm = document.getElementById("bgm");
-const happyEndingAudio = document.getElementById("happy-ending-audio");
 let backgroundAudioStarted = false;
 
-bgm.volume = 0.35;
-happyEndingAudio.volume = 0.65;
+bgm.volume = 1; // 實際音量交由 GainNode 控制
+
+function getAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      const src = audioCtx.createMediaElementSource(bgm);
+      bgmGainNode = audioCtx.createGain();
+      bgmGainNode.gain.value = 0.35 * masterVolume;
+      src.connect(bgmGainNode).connect(audioCtx.destination);
+    } catch (e) { /* 已連接過或不支援時忽略 */ }
+  }
+  return audioCtx;
+}
 
 function startBackgroundAudio() {
-  // 瀏覽器通常禁止頁面載入時自動播放有聲音效，因此在第一次使用者操作後開始播放。
+  getAudio();
   if (!backgroundAudioStarted) backgroundAudioStarted = true;
   bgm.play().catch(() => { backgroundAudioStarted = false; });
   if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
@@ -228,32 +299,35 @@ function stopBackgroundAudio() {
   bgm.currentTime = 0;
 }
 
-function playHappyEnding() {
-  stopBackgroundAudio();
-  happyEndingAudio.currentTime = 0;
-  happyEndingAudio.play().catch(() => {});
+/* ---------- 切換背景影片（一般 / 過關 / 失敗）---------- */
+function switchBgVideo(file, loop) {
+  bgVideo.loop = !!loop;
+  bgVideo.muted = !loop; // 一般背景影片靜音；過關/失敗影片播放聲音
+  bgVideo.volume = Math.min(1, masterVolume);
+  bgVideo.src = BG_BASE + file;
+  bgVideo.load();
+  bgVideo.play().catch(() => {});
 }
 
-function stopHappyEnding() {
-  happyEndingAudio.pause();
-  happyEndingAudio.currentTime = 0;
+/* ---------- 音量控制（0%~300%，預設 100%）---------- */
+function setVolume(v) {
+  masterVolume = v / 100;
+  document.getElementById("volume-value").textContent = v + "%";
+  if (bgmGainNode) bgmGainNode.gain.value = 0.35 * masterVolume;
+  bgVideo.volume = Math.min(1, masterVolume);
 }
 
 // 影片本身靜音自動播放；聲音音樂則於使用者第一次操作後播放。
 document.addEventListener("pointerdown", startBackgroundAudio, { capture: true });
 document.addEventListener("keydown", startBackgroundAudio, { capture: true });
 
-function getAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
 function beep(freq, dur, type, vol) {
   const ctx = getAudio();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type || "sine";
   osc.frequency.value = freq;
-  gain.gain.value = vol || 0.15;
+  gain.gain.value = (vol || 0.15) * masterVolume;
   osc.connect(gain); gain.connect(ctx.destination);
   osc.start();
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
@@ -264,37 +338,82 @@ function playRight() {
   const notes = [523, 659, 784, 1047];
   notes.forEach((f, i) => setTimeout(() => beep(f, 0.25, "sine", 0.15), i * 130));
 }
-function playTimeout() { beep(180, 1.4, "sawtooth", 0.22); }
 function playTick() { beep(880, 0.05, "sine", 0.06); }
 
+/* ---------- 設定浮動視窗 ---------- */
+function toggleSettings() {
+  document.getElementById("settings-panel").classList.toggle("hidden");
+  document.getElementById("reset-confirm-row").classList.add("hidden");
+  document.getElementById("reset-request-btn").classList.remove("hidden");
+}
+function requestReset() {
+  document.getElementById("reset-request-btn").classList.add("hidden");
+  document.getElementById("reset-confirm-row").classList.remove("hidden");
+}
+function cancelReset() {
+  document.getElementById("reset-confirm-row").classList.add("hidden");
+  document.getElementById("reset-request-btn").classList.remove("hidden");
+}
+function confirmReset() {
+  if (resetGuard) return;
+  resetGuard = true;
+  toggleSettings();
+  resetRoom();
+  setTimeout(() => { resetGuard = false; }, 1500);
+}
+
+/* ---------- 說明浮動視窗 ---------- */
+function storyButtonClick() {
+  if (!storyConfirmed) {
+    confirmStory();
+  } else {
+    document.getElementById("story-panel").classList.add("hidden");
+  }
+}
+function confirmStory() {
+  storyConfirmed = true;
+  document.getElementById("story-confirm-btn").textContent = "關閉";
+  document.getElementById("story-panel").classList.add("hidden");
+  document.getElementById("story-mini-btn").classList.remove("hidden");
+  beginCountdown();
+}
+function toggleStoryPanel() {
+  document.getElementById("story-panel").classList.toggle("hidden");
+}
+
 /* ---------- 初始化：直接進入女巫配藥室 ---------- */
-document.getElementById("room-screen").style.background = currentRoom.bg;
 resetRoom();
 
 function resetRoom() {
-  const btn = document.getElementById("reset-btn");
-  if (btn.disabled) return; // 防止連續快速按下造成多組計時器同時運作
-  btn.disabled = true;
-  setTimeout(() => { btn.disabled = false; }, 1500);
-
   clearInterval(timerInterval);
   clearInterval(countdownInterval);
   clearTimeout(storyTimeoutId);
-  stopHappyEnding();
   timerInterval = null;
   countdownInterval = null;
   storyTimeoutId = null;
 
-  timeLeft = currentRoom.timeLimit;
+  switchBgVideo("witch-bg.mp4", true);
+
+  timeLeft = ROOM.timeLimit;
   pwInput = "";
+  storyConfirmed = false;
   const colorKeys = Object.keys(COLOR_CODES);
   currentColor = colorKeys[Math.floor(Math.random() * colorKeys.length)];
+
   document.getElementById("countdown-hint").textContent = "";
   document.getElementById("challenge-area").classList.add("hidden");
   document.getElementById("end-screen").classList.add("hidden");
   document.getElementById("end-screen").className = "hidden";
   document.getElementById("feedback").textContent = "";
-  typeStory(currentRoom.story, beginCountdown);
+
+  document.getElementById("story-confirm-btn").textContent = "確認後開始";
+  document.getElementById("story-confirm-btn").classList.remove("ready");
+  document.getElementById("story-mini-btn").classList.add("hidden");
+  document.getElementById("story-panel").classList.remove("hidden");
+
+  typeStory(ROOM.story, () => {
+    document.getElementById("story-confirm-btn").classList.add("ready");
+  });
   buildKeypad();
   startBackgroundAudio();
 }
@@ -317,7 +436,7 @@ function typeStory(text, onDone) {
   step();
 }
 
-/* ---------- 故事播完後，自動倒數 5 秒開始 ---------- */
+/* ---------- 確認後倒數 5 秒開始 ---------- */
 function beginCountdown() {
   clearInterval(countdownInterval);
   const hint = document.getElementById("countdown-hint");
@@ -391,7 +510,7 @@ function handleKey(k) {
     checkPassword();
     return;
   } else {
-    if (pwInput.length < 8) pwInput += k;
+    if (pwInput.length < 4) pwInput += k;
   }
   document.getElementById("pw-display").textContent = pwInput;
 }
@@ -418,11 +537,13 @@ function checkPassword() {
 
 function showEnd(success) {
   document.getElementById("challenge-area").classList.add("hidden");
+  document.getElementById("story-mini-btn").classList.add("hidden");
   const end = document.getElementById("end-screen");
   end.classList.remove("hidden");
+  stopBackgroundAudio();
   if (success) {
     end.className = "success";
-    playHappyEnding();
+    switchBgVideo("happy_end.mp4", false);
     end.innerHTML = `🎉 恭喜過關！<br><br>
       <span style="font-size:15px; line-height:1.7; display:inline-block; max-width:80%;">
       女巫：<br>
@@ -431,10 +552,16 @@ function showEnd(success) {
       紀念禮物拿去吧！」
       </span>`;
   } else {
-    stopHappyEnding();
     end.className = "fail";
-    end.innerHTML = `⏰ 時間到！<br><span style="font-size:16px;">請按上方「重置」按鈕再挑戰一次</span>`;
-    playTimeout();
+    switchBgVideo("bad_end.mp4", false);
+    end.innerHTML = `⏰ 時間到！<br><br>
+      <span style="font-size:15px; line-height:1.7; display:inline-block; max-width:80%;">
+      女巫：<br>
+      「看來你們對於密室逃脫的玩法還不太了解，<br>
+      別灰心，看你們那麼認真解謎的份上，<br>
+      還是讓你們安全地離開這座黑森林，<br>
+      新莊國小的詛咒也即將破除……」
+      </span>`;
   }
 }
 </script>
