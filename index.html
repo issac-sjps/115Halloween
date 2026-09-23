@@ -227,8 +227,17 @@ function enterFullscreen() {
 }
 
 /* 只放行：0-9 數字、Enter(確認)、Backspace/Delete(清除)。
-   Esc 不攔截，交由瀏覽器原生離開全螢幕。其餘按鍵一律阻擋。 */
+   Esc 不攔截，交由瀏覽器原生離開全螢幕。其餘按鍵一律阻擋。
+   老師密技：按 Ctrl+C 可以解鎖鍵盤（恢復 F5、F12、Ctrl+R 等瀏覽器功能）。 */
+let keyboardLocked = true;
+
 document.addEventListener("keydown", e => {
+  if (e.ctrlKey && (e.key === "c" || e.key === "C")) {
+    keyboardLocked = false;
+    return; // 解鎖：不攔截，交還瀏覽器處理
+  }
+  if (!keyboardLocked) return; // 已解鎖，不再阻擋任何按鍵
+
   if (e.key === "Escape") return; // 讓瀏覽器處理離開全螢幕
   if (e.key >= "0" && e.key <= "9") {
     e.preventDefault();
