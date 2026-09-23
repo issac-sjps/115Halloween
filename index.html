@@ -148,10 +148,11 @@
     position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: center;
     padding-bottom: 3vh; pointer-events: none;
   }
+  #end-screen.fail { padding-bottom: 14vh; }
   #restart-btn {
-    pointer-events: auto; padding: 12px 36px; font-size: clamp(16px, 2.4vh, 20px);
-    background: #ff8c2b; color: #1c1c28; border: none; border-radius: 10px;
-    cursor: pointer; font-weight: bold; box-shadow: 0 6px 24px #000a;
+    pointer-events: auto; padding: 10px 30px; font-size: clamp(15px, 2.2vh, 19px);
+    background: #1c1c28dd; color: #f0e6d2; border: 1px solid #4a3d5c;
+    border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 6px 24px #000a;
     opacity: 0; transform: translateY(12px); transition: opacity 0.4s, transform 0.4s;
   }
   #restart-btn.show { opacity: 1; transform: translateY(0); }
@@ -575,6 +576,7 @@ function showEnd(success) {
   const restartBtn = document.getElementById("restart-btn");
   restartBtn.classList.remove("show");
   end.classList.remove("hidden");
+  end.classList.toggle("fail", !success);
   stopBackgroundAudio();
   switchBgVideo(success ? "happy_end.mp4" : "bad_end.mp4", false);
   bgVideo.onended = () => { restartBtn.classList.add("show"); };
