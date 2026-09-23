@@ -2,66 +2,67 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>萬聖節密室逃脫</title>
 <style>
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
-  html, body { -webkit-touch-callout: none; height: 100%; overflow: hidden; margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: #0d0d14; color: #f0e6d2; }
-  
-  /* 背景影片 */
-  #bg-video {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    z-index: -1;
-    object-fit: cover;
-    filter: brightness(0.6);
+  html, body { -webkit-touch-callout: none; }
+  #fullscreen-btn {
+    margin-top: 10px; font-size: 15px; padding: 8px 20px; background: #241b30;
+    border: 1px solid #4a3d5c; color: #f0e6d2; border-radius: 8px; cursor: pointer;
   }
-
+  #fullscreen-btn:hover { border-color: #ff8c2b; }
+  body {
+    margin: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: #0d0d14;
+    color: #f0e6d2;
+    min-height: 100vh;
+  }
   .hidden { display: none !important; }
 
-  /* 教室大螢幕佈局 */
+  /* ---------- 教室大螢幕：上下置中，用 vh/clamp 自動縮放不出現捲軸 ---------- */
+  html, body { height: 100%; overflow: hidden; }
   #room-screen {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2vh 4vw;
-    position: relative;
-    z-index: 1;
+    height: 100vh; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 2vh 4vw; position: relative;
+    background-size: cover; background-position: center;
   }
+  .bg-video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0; pointer-events: none;
+  }
+  #room-screen > *:not(.bg-video) { position: relative; z-index: 1; }
+  #end-screen { z-index: 3; }
 
   .back-btn, .reset-btn {
     position: absolute; top: 1.5vh; background: #1c1c28cc; border: 1px solid #4a3d5c;
-    color: #f0e6d2; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px;
+    color: #f0e6d2; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
     z-index: 5;
   }
+  .reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .back-btn { left: 12px; }
   .reset-btn { right: 12px; }
-  .back-btn:hover, .reset-btn:hover { border-color: #ff8c2b; color: #ff8c2b; }
 
   #story-box {
     max-width: 720px; text-align: center;
-    font-size: clamp(16px, 2.6vh, 24px); line-height: 1.6; max-height: 34vh;
-    text-shadow: 2px 2px 4px #000;
+    font-size: clamp(14px, 2.4vh, 22px); line-height: 1.6; max-height: 34vh; overflow: hidden;
   }
+  #story-cursor { animation: blink 0.8s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
 
   #countdown-hint {
-    text-align: center; font-size: clamp(14px, 2.2vh, 18px); color: #ffcc4d;
-    margin: 1vh 0; min-height: 2.4vh; text-shadow: 1px 1px 3px #000;
+    text-align: center; font-size: clamp(13px, 2vh, 18px); color: #ffcc4d;
+    margin: 1vh 0; min-height: 2.4vh;
   }
 
   #color-clue {
     text-align: center; margin: 0.4vh 0 1.4vh; font-size: clamp(14px, 2.2vh, 20px); font-weight: bold;
     padding: 0.8vh 20px; border-radius: 10px; display: inline-block;
   }
-  .clue-red { background: #4a1010cc; color: #ff6b6b; border: 2px solid #ff6b6b; }
-  .clue-yellow { background: #4a3d10cc; color: #ffe066; border: 2px solid #ffe066; }
+  .clue-red { background: #4a1010; color: #ff6b6b; border: 2px solid #ff6b6b; }
+  .clue-yellow { background: #4a3d10; color: #ffe066; border: 2px solid #ffe066; }
+  .clue-blue { background: #10304a; color: #66c7ff; border: 2px solid #66c7ff; }
+  .clue-green { background: #10402a; color: #6bffa0; border: 2px solid #6bffa0; }
 
   #timer {
     font-size: clamp(28px, 6.5vh, 56px); font-weight: bold; text-align: center; margin: 0.5vh 0;
@@ -74,33 +75,30 @@
 
   #keypad-wrap { display: flex; flex-direction: column; align-items: center; margin-top: 1vh; }
   #pw-display {
-    font-size: clamp(22px, 3.8vh, 34px); letter-spacing: 10px; min-height: 5vh; margin-bottom: 1.4vh;
-    border-bottom: 2px solid #ff8c2b; padding: 4px 20px; min-width: 220px; text-align: center;
-    background: rgba(0,0,0,0.5); border-radius: 6px;
+    font-size: clamp(20px, 3.5vh, 32px); letter-spacing: 10px; min-height: 4vh; margin-bottom: 1.4vh;
+    border-bottom: 2px solid #4a3d5c; padding: 4px 20px; min-width: 200px; text-align: center;
   }
   #keypad {
-    display: grid; grid-template-columns: repeat(3, clamp(52px, 8vh, 70px)); gap: 10px;
+    display: grid; grid-template-columns: repeat(3, clamp(48px, 7.5vh, 66px)); gap: 8px;
   }
   #keypad button {
-    height: clamp(44px, 7.5vh, 60px); font-size: clamp(16px, 2.8vh, 22px); border-radius: 10px;
-    border: 1px solid #4a3d5c; background: #241b30dd; color: #f0e6d2; cursor: pointer;
+    height: clamp(42px, 7.5vh, 58px); font-size: clamp(15px, 2.6vh, 20px); border-radius: 10px;
+    border: 1px solid #4a3d5c; background: #241b30; color: #f0e6d2; cursor: pointer;
   }
-  #keypad button:hover { border-color: #ff8c2b; }
   #keypad button:active { background: #382b48; }
   .key-clear { color: #ffcc4d !important; }
-  .key-enter { color: #7ee787 !important; }
+  .key-enter { color: #7ee787 !important; grid-column: span 1; }
 
   #feedback {
-    margin-top: 1.2vh; font-size: clamp(14px, 2.2vh, 20px); font-weight: bold;
-    min-height: 2.8vh; text-align: center; text-shadow: 1px 1px 3px #000;
+    margin-top: 1.2vh; font-size: clamp(13px, 2vh, 18px); font-weight: bold;
+    min-height: 2.4vh; text-align: center;
   }
   .fb-wrong { color: #ff5c5c; }
   .fb-right { color: #7ee787; }
 
   #end-screen {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center;
-    font-size: clamp(20px, 3.6vh, 30px); background: rgba(13, 13, 20, 0.92); z-index: 10;
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: clamp(18px, 3.4vh, 26px); background: #0d0d14ee;
   }
   #end-screen.success { color: #7ee787; }
   #end-screen.fail { color: #ff5c5c; }
@@ -115,14 +113,18 @@
 </head>
 <body>
 
-<!-- 背景動態影片 -->
-<video id="bg-video" autoplay loop muted playsinline preload="auto">
-  <source src="https://issac-sjps.github.io/115Halloween/witch-bg.mp4" type="video/mp4">
-</video>
-
-<!-- 教室大螢幕內容 -->
+<!-- ============ 教室大螢幕 ============ -->
 <div id="room-screen">
-  <button id="fullscreen-btn" class="back-btn" onclick="enterFullscreen()">🖥️ 全螢幕</button>
+  <video id="bg-video" class="bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+    <source src="https://issac-sjps.github.io/115Halloween/witch-bg.mp4" type="video/mp4">
+  </video>
+  <audio id="bgm" preload="auto" loop>
+    <source src="https://issac-sjps.github.io/115Halloween/bgm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="happy-ending-audio" preload="auto">
+    <source src="https://issac-sjps.github.io/115Halloween/HappyEnding.mp3" type="audio/mpeg">
+  </audio>
+  <button id="fullscreen-btn" class="back-btn" onclick="enterFullscreen()" style="position:absolute;">🖥️ 全螢幕</button>
   <button id="reset-btn" class="reset-btn" onclick="resetRoom()">🔄 重置（請只按一次）</button>
 
   <div id="story-box"></div>
@@ -130,7 +132,7 @@
 
   <div id="challenge-area" class="hidden">
     <div id="timer" class="t-safe">05:00</div>
-    <div id="color-clue-wrap"><span id="color-clue"></span></div>
+    <div id="color-clue-wrap" style="text-align:center;"><span id="color-clue"></span></div>
     <div id="keypad-wrap">
       <div id="pw-display"></div>
       <div id="keypad"></div>
@@ -142,202 +144,299 @@
 </div>
 
 <script>
-/* ================= 教室設定區 ================= */
+/* ================= 教室設定區（老師可自行修改）================= */
 const ROOM = {
-    title: "萬聖節密室逃脫",
-    timeLimit: 300, // 倒數時間 (秒)
-    password: "1031", // 密碼（可改為您的關卡密碼）
-    bgmUrl: "https://issac-sjps.github.io/115Halloween/bgm.mp3",
-    winBgmUrl: "https://issac-sjps.github.io/115Halloween/HappyEnding.mp3",
-    storyText: "🎃 歡迎來到女巫的魔法教室！門已經被封印了，請在時間結束前解開 4 位數密碼逃脫！",
-    clueText: "🔴 提示：萬聖節是哪一天？（月/日 4 位數）",
-    clueClass: "clue-red"
+    bg: "#0d0d14",
+    story: "歡迎來到女巫的配藥室...\n架上擺滿了各色毒藥，每一瓶都散發著詭異的光。\n女巫留下一張古老的配方，藏著解開封印的密碼。\n5 分鐘內若不能找出正確的密碼，\n瓶中的毒氣將會瀰漫整間藥室...",
+    timeLimit: 300,
+    password: "0731"
 };
+/* 四色密碼對照表 */
+const COLOR_CODES = {
+  red:    { name: "紅色", code: "582", cls: "clue-red" },
+  yellow: { name: "黃色", code: "314", cls: "clue-yellow" },
+  blue:   { name: "藍色", code: "709", cls: "clue-blue" },
+  green:  { name: "綠色", code: "946", cls: "clue-green" }
+};
+/* ================================================================ */
 
+/* ================= 鎖定機制：禁右鍵 / 全螢幕 / 鍵盤白名單 ================= */
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+function enterFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if (el.msRequestFullscreen) el.msRequestFullscreen();
+}
+
+/* 只放行：0-9 數字、Enter(確認)、Backspace/Delete(清除)。
+   Esc 不攔截，交由瀏覽器原生離開全螢幕。其餘按鍵一律阻擋。 */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") return; // 讓瀏覽器處理離開全螢幕
+  if (e.key >= "0" && e.key <= "9") {
+    e.preventDefault();
+    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+      handleKey(e.key);
+    }
+    return;
+  }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+      handleKey("確認");
+    }
+    return;
+  }
+  if (e.key === "Backspace" || e.key === "Delete") {
+    e.preventDefault();
+    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+      handleKey("清除");
+    }
+    return;
+  }
+  e.preventDefault(); // 阻擋 F5、Ctrl+R、Alt+Tab 快捷鍵觸發、其餘所有按鍵
+}, true);
+/* ================================================================ */
+
+
+let currentRoom = ROOM;
+let currentColor = null;
+let timeLeft = 0;
 let timerInterval = null;
-let timeLeft = ROOM.timeLimit;
-let currentInput = "";
-let isGameEnded = false;
-let audioUnlocked = false;
+let countdownInterval = null;
+let storyTimeoutId = null;
+let pwInput = "";
+let audioCtx = null;
+const bgVideo = document.getElementById("bg-video");
+const bgm = document.getElementById("bgm");
+const happyEndingAudio = document.getElementById("happy-ending-audio");
+let backgroundAudioStarted = false;
 
-/* 音效控制 */
-const bgm = new Audio(ROOM.bgmUrl);
-bgm.loop = true;
-const winAudio = new Audio(ROOM.winBgmUrl);
+bgm.volume = 0.35;
+happyEndingAudio.volume = 0.65;
 
-function unlockAudio() {
-  if (!audioUnlocked) {
-    bgm.play().then(() => {
-      audioUnlocked = true;
-    }).catch(e => console.log("等待使用者互動播放音樂:", e));
-  }
+function startBackgroundAudio() {
+  // 瀏覽器通常禁止頁面載入時自動播放有聲音效，因此在第一次使用者操作後開始播放。
+  if (!backgroundAudioStarted) backgroundAudioStarted = true;
+  bgm.play().catch(() => { backgroundAudioStarted = false; });
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
 }
 
-document.addEventListener("click", unlockAudio, { once: true });
+function stopBackgroundAudio() {
+  bgm.pause();
+  bgm.currentTime = 0;
+}
 
-/* 打字機效果 */
-function typeStory(text, elementId, speed = 40, callback) {
-  const el = document.getElementById(elementId);
-  el.innerHTML = "";
+function playHappyEnding() {
+  stopBackgroundAudio();
+  happyEndingAudio.currentTime = 0;
+  happyEndingAudio.play().catch(() => {});
+}
+
+function stopHappyEnding() {
+  happyEndingAudio.pause();
+  happyEndingAudio.currentTime = 0;
+}
+
+// 影片本身靜音自動播放；聲音音樂則於使用者第一次操作後播放。
+document.addEventListener("pointerdown", startBackgroundAudio, { capture: true });
+document.addEventListener("keydown", startBackgroundAudio, { capture: true });
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function beep(freq, dur, type, vol) {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.value = freq;
+  gain.gain.value = vol || 0.15;
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+  osc.stop(ctx.currentTime + dur);
+}
+function playWrong() { beep(180, 0.3, "sawtooth", 0.18); }
+function playRight() {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => beep(f, 0.25, "sine", 0.15), i * 130));
+}
+function playTimeout() { beep(180, 1.4, "sawtooth", 0.22); }
+function playTick() { beep(880, 0.05, "sine", 0.06); }
+
+/* ---------- 初始化：直接進入女巫配藥室 ---------- */
+document.getElementById("room-screen").style.background = currentRoom.bg;
+resetRoom();
+
+function resetRoom() {
+  const btn = document.getElementById("reset-btn");
+  if (btn.disabled) return; // 防止連續快速按下造成多組計時器同時運作
+  btn.disabled = true;
+  setTimeout(() => { btn.disabled = false; }, 1500);
+
+  clearInterval(timerInterval);
+  clearInterval(countdownInterval);
+  clearTimeout(storyTimeoutId);
+  stopHappyEnding();
+  timerInterval = null;
+  countdownInterval = null;
+  storyTimeoutId = null;
+
+  timeLeft = currentRoom.timeLimit;
+  pwInput = "";
+  const colorKeys = Object.keys(COLOR_CODES);
+  currentColor = colorKeys[Math.floor(Math.random() * colorKeys.length)];
+  document.getElementById("countdown-hint").textContent = "";
+  document.getElementById("challenge-area").classList.add("hidden");
+  document.getElementById("end-screen").classList.add("hidden");
+  document.getElementById("end-screen").className = "hidden";
+  document.getElementById("feedback").textContent = "";
+  typeStory(currentRoom.story, beginCountdown);
+  buildKeypad();
+  startBackgroundAudio();
+}
+
+/* ---------- 打字機效果，播完後執行 callback ---------- */
+function typeStory(text, onDone) {
+  const box = document.getElementById("story-box");
+  box.innerHTML = "";
   let i = 0;
-  const timer = setInterval(() => {
-    if (i < text.length) {
-      el.innerHTML += text.charAt(i);
+  const speed = 75;
+  function step() {
+    if (i <= text.length) {
+      box.innerHTML = text.slice(0, i).replace(/\n/g, "<br>") + '<span id="story-cursor">▍</span>';
       i++;
-    } else {
-      clearInterval(timer);
-      if (callback) callback();
+      storyTimeoutId = setTimeout(step, speed);
+    } else if (onDone) {
+      onDone();
     }
-  }, speed);
-}
-
-/* 初始化遊戲 */
-function initGame() {
-  typeStory(ROOM.storyText, "story-box", 40, () => {
-    document.getElementById("countdown-hint").innerText = "⏰ 倒數計時開始！請點擊數字鍵輸入密碼：";
-    document.getElementById("challenge-area").classList.remove("hidden");
-    startTimer();
-  });
-
-  const clueEl = document.getElementById("color-clue");
-  clueEl.innerText = ROOM.clueText;
-  clueEl.className = ROOM.clueClass;
-
-  renderKeypad();
-}
-
-/* 渲染鍵盤 */
-function renderKeypad() {
-  const keypad = document.getElementById("keypad");
-  keypad.innerHTML = "";
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "↵"];
-  
-  keys.forEach(k => {
-    const btn = document.createElement("button");
-    btn.innerText = k;
-    if (k === "C") {
-      btn.className = "key-clear";
-      btn.onclick = () => clearInput();
-    } else if (k === "↵") {
-      btn.className = "key-enter";
-      btn.onclick = () => submitPassword();
-    } else {
-      btn.onclick = () => appendInput(k);
-    }
-    keypad.appendChild(btn);
-  });
-}
-
-function appendInput(num) {
-  unlockAudio();
-  if (isGameEnded || currentInput.length >= 6) return;
-  currentInput += num;
-  updateDisplay();
-}
-
-function clearInput() {
-  unlockAudio();
-  if (isGameEnded) return;
-  currentInput = "";
-  updateDisplay();
-  document.getElementById("feedback").innerText = "";
-}
-
-function updateDisplay() {
-  document.getElementById("pw-display").innerText = currentInput;
-}
-
-function submitPassword() {
-  unlockAudio();
-  if (isGameEnded) return;
-  
-  const fb = document.getElementById("feedback");
-  if (currentInput === ROOM.password) {
-    gameWin();
-  } else {
-    fb.innerText = "❌ 密碼錯誤！請重新嘗試！";
-    fb.className = "fb-wrong";
-    const display = document.getElementById("pw-display");
-    display.classList.add("shake");
-    setTimeout(() => display.classList.remove("shake"), 400);
-    currentInput = "";
-    updateDisplay();
   }
+  step();
 }
 
-function startTimer() {
+/* ---------- 故事播完後，自動倒數 5 秒開始 ---------- */
+function beginCountdown() {
+  clearInterval(countdownInterval);
+  const hint = document.getElementById("countdown-hint");
+  let n = 5;
+  hint.textContent = `挑戰即將開始… ${n}`;
+  beep(660, 0.15, "sine", 0.12);
+  countdownInterval = setInterval(() => {
+    n--;
+    if (n > 0) {
+      hint.textContent = `挑戰即將開始… ${n}`;
+      beep(660, 0.15, "sine", 0.12);
+    } else {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      hint.textContent = "";
+      beep(990, 0.2, "sine", 0.14);
+      startChallenge();
+    }
+  }, 1000);
+}
+
+/* ---------- 開始挑戰 ---------- */
+function startChallenge() {
+  clearInterval(timerInterval);
+  document.getElementById("challenge-area").classList.remove("hidden");
+  const clue = document.getElementById("color-clue");
+  const info = COLOR_CODES[currentColor];
+  clue.textContent = `女巫最害怕「${currentColor}」的解藥！`;
+  clue.className = info.cls;
   updateTimerDisplay();
   timerInterval = setInterval(() => {
     timeLeft--;
+    if (timeLeft <= 10 && timeLeft > 0) playTick();
     updateTimerDisplay();
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      gameOver();
+      timerInterval = null;
+      showEnd(false);
     }
   }, 1000);
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-  const s = (timeLeft % 60).toString().padStart(2, '0');
-  const timerEl = document.getElementById("timer");
-  timerEl.innerText = `${m}:${s}`;
-  
-  if (timeLeft <= 60) {
-    timerEl.className = "t-danger";
-  } else if (timeLeft <= 180) {
-    timerEl.className = "t-warn";
+  const m = Math.max(0, Math.floor(timeLeft / 60)).toString().padStart(2, "0");
+  const s = Math.max(0, timeLeft % 60).toString().padStart(2, "0");
+  const el = document.getElementById("timer");
+  el.textContent = `${m}:${s}`;
+  el.className = timeLeft <= 30 ? "t-danger" : (timeLeft <= 60 ? "t-warn" : "t-safe");
+}
+
+/* ---------- 數字鍵盤 ---------- */
+function buildKeypad() {
+  const pad = document.getElementById("keypad");
+  pad.innerHTML = "";
+  document.getElementById("pw-display").textContent = "";
+  const keys = ["1","2","3","4","5","6","7","8","9","清除","0","確認"];
+  keys.forEach(k => {
+    const btn = document.createElement("button");
+    btn.textContent = k;
+    if (k === "清除") btn.classList.add("key-clear");
+    if (k === "確認") btn.classList.add("key-enter");
+    btn.onclick = () => handleKey(k);
+    pad.appendChild(btn);
+  });
+}
+
+function handleKey(k) {
+  if (k === "清除") {
+    pwInput = "";
+  } else if (k === "確認") {
+    checkPassword();
+    return;
   } else {
-    timerEl.className = "t-safe";
+    if (pwInput.length < 8) pwInput += k;
+  }
+  document.getElementById("pw-display").textContent = pwInput;
+}
+
+function checkPassword() {
+  const fb = document.getElementById("feedback");
+  if (pwInput === COLOR_CODES[currentColor].code) {
+    fb.textContent = "";
+    clearInterval(timerInterval);
+    timerInterval = null;
+    playRight();
+    showEnd(true);
+  } else {
+    fb.textContent = "❌ 密碼錯誤，請再試一次";
+    fb.className = "fb-wrong";
+    playWrong();
+    const wrap = document.getElementById("keypad-wrap");
+    wrap.classList.add("shake");
+    setTimeout(() => wrap.classList.remove("shake"), 400);
+    pwInput = "";
+    document.getElementById("pw-display").textContent = "";
   }
 }
 
-function gameWin() {
-  isGameEnded = true;
-  clearInterval(timerInterval);
-  bgm.pause();
-  winAudio.play().catch(e => console.log(e));
-
-  const endScreen = document.getElementById("end-screen");
-  endScreen.classList.remove("hidden");
-  endScreen.className = "success";
-  endScreen.innerHTML = `
-    <div>🎉 恭喜成功過關！逃離女巫教室！🎃</div>
-    <br>
-    <button onclick="resetRoom()" style="padding:10px 24px; font-size:18px; cursor:pointer; background:#7ee787; border:none; border-radius:8px; font-weight:bold;">再玩一次</button>
-  `;
-}
-
-function gameOver() {
-  isGameEnded = true;
-  bgm.pause();
-
-  const endScreen = document.getElementById("end-screen");
-  endScreen.classList.remove("hidden");
-  endScreen.className = "fail";
-  endScreen.innerHTML = `
-    <div>💀 時間到！逃脫失敗，成為了女巫的晚餐... 👻</div>
-    <br>
-    <button onclick="resetRoom()" style="padding:10px 24px; font-size:18px; cursor:pointer; background:#ff5c5c; color:#fff; border:none; border-radius:8px; font-weight:bold;">重新挑戰</button>
-  `;
-}
-
-function resetRoom() {
-  location.reload();
-}
-
-function enterFullscreen() {
-  unlockAudio();
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => {
-      alert(`無法切換全螢幕: ${err.message}`);
-    });
+function showEnd(success) {
+  document.getElementById("challenge-area").classList.add("hidden");
+  const end = document.getElementById("end-screen");
+  end.classList.remove("hidden");
+  if (success) {
+    end.className = "success";
+    playHappyEnding();
+    end.innerHTML = `🎉 恭喜過關！<br><br>
+      <span style="font-size:15px; line-height:1.7; display:inline-block; max-width:80%;">
+      女巫：<br>
+      「哇！你們找到解藥了，太厲害了！<br>
+      黑森林的大門為你們打開，<br>
+      紀念禮物拿去吧！」
+      </span>`;
   } else {
-    document.exitFullscreen();
+    stopHappyEnding();
+    end.className = "fail";
+    end.innerHTML = `⏰ 時間到！<br><span style="font-size:16px;">請按上方「重置」按鈕再挑戰一次</span>`;
+    playTimeout();
   }
 }
-
-window.onload = initGame;
 </script>
 </body>
 </html>
