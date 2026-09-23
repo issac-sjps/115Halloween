@@ -36,6 +36,7 @@
   }
   #fullscreen-btn { left: 12px; }
   #settings-btn { right: 12px; }
+  #fullscreen-btn small { font-size: 10px; opacity: 0.75; margin-left: 2px; }
 
   /* ---------- 設定浮動視窗 ---------- */
   #settings-panel {
@@ -61,8 +62,8 @@
 
   /* ---------- 說明浮動視窗 ---------- */
   #story-panel {
-    position: fixed; top: 6vh; left: 50%; transform: translateX(-50%);
-    width: min(88vw, 560px); max-height: 70vh; overflow-y: auto;
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(88vw, 560px); max-height: 80vh; overflow-y: auto;
     background: #17121ee6; border: 1px solid #4a3d5c; border-radius: 14px;
     padding: 3vh 4vw; z-index: 20; box-shadow: 0 10px 40px #000c;
   }
@@ -89,15 +90,23 @@
   }
 
   #countdown-hint {
-    position: fixed; top: 1.5vh; left: 50%; transform: translateX(-50%);
-    text-align: center; font-size: clamp(13px, 2vh, 18px); color: #ffcc4d;
-    min-height: 2.4vh; z-index: 15;
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center; font-size: clamp(26px, 5.5vh, 48px); font-weight: 700;
+    color: #ffcc4d; text-shadow: 0 0 16px #000, 0 0 4px #000;
+    min-height: 2.4vh; z-index: 15; pointer-events: none;
+    background: #17121e00; white-space: nowrap;
+  }
+  #countdown-hint:not(:empty) {
+    background: #17121ecc; border: 1px solid #4a3d5c; border-radius: 14px;
+    padding: 1.6vh 4vw; box-shadow: 0 10px 40px #000c;
   }
 
   #color-clue {
-    text-align: center; margin: 0.4vh 0 1.4vh; font-size: clamp(14px, 2.2vh, 20px); font-weight: bold;
+    text-align: center; margin: 0.4vh 0 1.4vh; font-weight: bold;
     padding: 0.8vh 20px; border-radius: 10px; display: inline-block;
   }
+  #color-clue .clue-en { font-size: clamp(12px, 1.8vh, 16px); opacity: 0.85; margin-bottom: 0.2vh; }
+  #color-clue .clue-zh { font-size: clamp(14px, 2.2vh, 20px); }
   .clue-red { background: #4a1010; color: #ff6b6b; border: 2px solid #ff6b6b; }
   .clue-yellow { background: #4a3d10; color: #ffe066; border: 2px solid #ffe066; }
   .clue-blue { background: #10304a; color: #66c7ff; border: 2px solid #66c7ff; }
@@ -161,7 +170,7 @@
     <source src="https://issac-sjps.github.io/115Halloween/bgm.mp3" type="audio/mpeg">
   </audio>
 
-  <button id="fullscreen-btn" onclick="enterFullscreen()">🖥️ 全螢幕</button>
+  <button id="fullscreen-btn" onclick="enterFullscreen()">🖥️ 全螢幕 <small>(ESC離開)</small></button>
   <button id="settings-btn" onclick="toggleSettings()">⚙️ 設定</button>
 
   <div id="settings-panel" class="hidden">
@@ -203,7 +212,7 @@
 <script>
 /* ================= 教室設定區（老師可自行修改）================= */
 const ROOM = {
-    story: "歡迎來到女巫的配藥室...\n架上擺滿了各色毒藥，每一瓶都散發著詭異的光。\n女巫留下一張古老的配方，藏著解開封印的密碼。\n5 分鐘內若不能找出正確的密碼，\n瓶中的毒氣將會瀰漫整間藥室...",
+    story: "Welcome to the witch's potion room...\n歡迎來到女巫的配藥室...\nThe shelves are filled with vials of poison, each glowing with an eerie light.\n架上擺滿了各色毒藥，每一瓶都散發著詭異的光。\nThe witch left behind an ancient recipe, hiding the code that breaks the seal.\n女巫留下一張古老的配方，藏著解開封印的密碼。\nIf you cannot find the correct code within 5 minutes,\n5 分鐘內若不能找出正確的密碼，\nthe poisonous fumes will fill the entire room...\n瓶中的毒氣將會瀰漫整間藥室...",
     timeLimit: 300
 };
 /* 四色密碼對照表（四碼） */
@@ -311,7 +320,7 @@ function stopBackgroundAudio() {
 /* ---------- 切換背景影片（一般 / 過關 / 失敗）---------- */
 function switchBgVideo(file, loop) {
   bgVideo.loop = !!loop;
-  bgVideo.muted = !loop; // 一般背景影片靜音；過關/失敗影片播放聲音
+  bgVideo.muted = !!loop; // 一般背景影片靜音；過關/失敗影片播放聲音
   bgVideo.volume = Math.min(1, masterVolume);
   bgVideo.src = BG_BASE + file;
   bgVideo.load();
@@ -473,7 +482,8 @@ function startChallenge() {
   document.getElementById("challenge-area").classList.remove("hidden");
   const clue = document.getElementById("color-clue");
   const info = COLOR_CODES[currentColor];
-  clue.textContent = `女巫最害怕「${currentColor}」的解藥！`;
+  const enColor = currentColor.charAt(0).toUpperCase() + currentColor.slice(1);
+  clue.innerHTML = `<div class="clue-en">The witch fears the "${enColor}" antidote the most!</div><div class="clue-zh">女巫最害怕「${currentColor}」的解藥！</div>`;
   clue.className = info.cls;
   updateTimerDisplay();
   timerInterval = setInterval(() => {
