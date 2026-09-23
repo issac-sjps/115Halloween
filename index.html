@@ -63,13 +63,13 @@
   /* ---------- 說明浮動視窗 ---------- */
   #story-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: min(88vw, 560px); max-height: 80vh; overflow-y: auto;
+    width: min(94vw, 900px); max-height: 80vh; overflow-y: auto;
     background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
     padding: 3vh 4vw; z-index: 40; box-shadow: 0 10px 50px #000e;
   }
   #story-box {
     text-align: center;
-    font-size: clamp(14px, 2.2vh, 20px); line-height: 1.7;
+    font-size: clamp(13px, 2vh, 19px); line-height: 1.7;
   }
   #story-cursor { animation: blink 0.8s infinite; }
   @keyframes blink { 50% { opacity: 0; } }
@@ -452,7 +452,7 @@ function typeStory(text, onDone) {
   const box = document.getElementById("story-box");
   box.innerHTML = "";
   let i = 0;
-  const speed = 35;
+  const speed = 23;
   function step() {
     if (i <= text.length) {
       box.innerHTML = text.slice(0, i).replace(/\n/g, "<br>") + '<span id="story-cursor">▍</span>';
