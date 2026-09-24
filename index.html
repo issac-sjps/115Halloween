@@ -145,10 +145,9 @@
   .fb-right { color: #7ee787; }
 
   #end-screen {
-    position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: center;
-    padding-bottom: 3vh; pointer-events: none;
+    position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 0 3vw 3vh 0; pointer-events: none;
   }
-  #end-screen.fail { padding-bottom: 14vh; }
   #restart-btn {
     pointer-events: auto; padding: 10px 30px; font-size: clamp(15px, 2.2vh, 19px);
     background: #1c1c28dd; color: #f0e6d2; border: 1px solid #4a3d5c;
@@ -274,7 +273,7 @@
 <script>
 /* ================= 教室設定區（老師可自行修改）================= */
 const ROOM = {
-    story: "Welcome to the witch's potion room...\n歡迎來到女巫的配藥室...\nThe shelves are filled with vials of poison, each glowing with an eerie light.\n架上擺滿了各色毒藥，每一瓶都散發著詭異的光。\nThe witch left behind an ancient recipe, hiding the code that breaks the seal.\n女巫留下一張古老的配方，藏著解開封印的密碼。\nIf you cannot find the correct code within 5 minutes,\n5 分鐘內若不能找出正確的密碼，\nthe poisonous fumes will fill the entire room...\n瓶中的毒氣將會瀰漫整間藥室...",
+    story: "歡迎來到女巫的配藥室...\n架上擺滿了各色毒藥，每一瓶都散發著詭異的光。\n女巫留下一張古老的配方，藏著解開封印的密碼。\n5 分鐘內若不能找出正確的密碼，\n瓶中的毒氣將會瀰漫整間藥室...\n\nWelcome to the witch's potion room...\nThe shelves are filled with vials of poison, each glowing with an eerie light.\nThe witch left behind an ancient recipe, hiding the code that breaks the seal.\nIf you cannot find the correct code within 5 minutes,\nthe poisonous fumes will fill the entire room...",
     timeLimit: 300
 };
 /* 四色密碼對照表（四碼） */
