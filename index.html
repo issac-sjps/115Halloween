@@ -9,6 +9,7 @@
     --story-en-size: 13px;
     --story-panel-width: 550px;
     --title-scale: 95;
+    --confirm-img-scale: 100;
   }
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
   html, body { -webkit-touch-callout: none; }
@@ -80,8 +81,7 @@
   #story-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: min(94vw, var(--story-panel-width)); max-height: 80vh; overflow-y: auto;
-    background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
-    padding: 3vh min(4vw, 26px); z-index: 40; box-shadow: 0 10px 50px #000e;
+    padding: 3vh min(4vw, 26px); z-index: 40;
   }
   #site-title-img {
     position: fixed; top: 0; left: 50%; transform: translateX(-50%);
@@ -93,6 +93,10 @@
   #story-box {
     text-align: center;
     line-height: 1.7;
+  }
+  #story-box.with-bg {
+    background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
+    padding: 3vh min(4vw, 26px); box-shadow: 0 10px 50px #000e;
   }
   .story-zh { font-size: var(--story-zh-size); }
   .story-en { font-size: var(--story-en-size); }
@@ -108,7 +112,8 @@
   #story-confirm-btn.waiting { pointer-events: none; }
   #story-confirm-btn:active #story-confirm-img { transform: scale(0.94); }
   #story-confirm-img {
-    width: clamp(130px, 20vw, 220px); height: auto; display: block;
+    width: calc(clamp(130px, 20vw, 220px) * var(--confirm-img-scale, 100) / 100);
+    height: auto; display: block;
     filter: drop-shadow(0 0 18px #b565ff99) drop-shadow(0 6px 20px #000c);
     animation: magicPulse 2.4s ease-in-out infinite;
     transition: transform 0.15s, filter 0.3s;
@@ -335,6 +340,13 @@
       <div class="slider-row">
         <input type="range" id="title-scale-slider" min="20" max="150" step="5" value="95" oninput="setTitleScale(this.value)">
         <input type="number" class="slider-number" id="title-scale-number" min="20" max="150" step="5" value="95" oninput="setTitleScale(this.value)">
+      </div>
+    </div>
+    <div class="settings-row">
+      <label>🔮 魔法陣「挑戰開始」圖片大小（<span id="confirm-scale-value">100%</span>）</label>
+      <div class="slider-row">
+        <input type="range" id="confirm-scale-slider" min="20" max="200" step="5" value="100" oninput="setConfirmScale(this.value)">
+        <input type="number" class="slider-number" id="confirm-scale-number" min="20" max="200" step="5" value="100" oninput="setConfirmScale(this.value)">
       </div>
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
@@ -691,6 +703,8 @@ function startStoryTyping() {
   storyStage = "typing";
   const btn = document.getElementById("story-confirm-btn");
   const label = document.getElementById("story-confirm-label");
+  const box = document.getElementById("story-box");
+  box.classList.add("with-bg");
   btn.classList.add("waiting");
   label.textContent = "播放中…";
   label.classList.remove("hidden");
@@ -701,8 +715,8 @@ function startStoryTyping() {
       btn.classList.remove("waiting");
       document.getElementById("story-panel").classList.add("hidden");
       document.getElementById("story-mini-btn").classList.remove("hidden");
-      beginCountdown();
-    }, 1000);
+      startChallenge();
+    }, 5000);
   });
 }
 function toggleStoryPanel() {
@@ -742,6 +756,7 @@ function resetRoom() {
   document.getElementById("feedback").textContent = "";
 
   document.getElementById("story-box").innerHTML = "";
+  document.getElementById("story-box").classList.remove("with-bg");
   document.getElementById("story-confirm-label").textContent = "";
   document.getElementById("story-confirm-label").classList.add("hidden");
   document.getElementById("story-confirm-btn").classList.add("ready");
@@ -781,6 +796,13 @@ function setTitleScale(v) {
   document.getElementById("title-scale-value").textContent = v + "%";
   document.getElementById("title-scale-slider").value = v;
   document.getElementById("title-scale-number").value = v;
+}
+function setConfirmScale(v) {
+  v = Math.max(20, Math.min(200, Math.round(v)));
+  document.documentElement.style.setProperty("--confirm-img-scale", v);
+  document.getElementById("confirm-scale-value").textContent = v + "%";
+  document.getElementById("confirm-scale-slider").value = v;
+  document.getElementById("confirm-scale-number").value = v;
 }
 
 /* ---------- 打字機效果，播完後執行 callback ---------- */
