@@ -82,6 +82,10 @@
     background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
     padding: 3vh min(4vw, 26px); z-index: 40; box-shadow: 0 10px 50px #000e;
   }
+  #story-title-img {
+    display: block; width: 100%; max-width: 100%; height: auto;
+    margin: 0 auto 1.6vh; filter: drop-shadow(0 4px 14px #000c);
+  }
   #story-box {
     text-align: center;
     line-height: 1.7;
@@ -315,6 +319,7 @@
   </div>
 
   <div id="story-panel">
+    <img id="story-title-img" src="https://issac-sjps.github.io/115Halloween/Title.png" alt="女巫實驗室的秘密">
     <div id="story-box"></div>
     <button id="story-confirm-btn" onclick="storyButtonClick()">確認後開始</button>
   </div>
