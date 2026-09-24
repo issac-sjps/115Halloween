@@ -261,8 +261,8 @@
     <div class="settings-row">
       <label>⏱️ 最後10秒倒數「搭搭搭」音量（<span id="tick-volume-value">500%</span>）</label>
       <div class="slider-row">
-        <input type="range" id="tick-volume-slider" min="100" max="1500" step="10" value="500" oninput="setTickVolume(this.value)">
-        <input type="number" class="slider-number" id="tick-volume-number" min="100" max="1500" step="10" value="500" oninput="setTickVolume(this.value)">
+        <input type="range" id="tick-volume-slider" min="100" max="3000" step="10" value="500" oninput="setTickVolume(this.value)">
+        <input type="number" class="slider-number" id="tick-volume-number" min="100" max="3000" step="10" value="500" oninput="setTickVolume(this.value)">
       </div>
     </div>
     <div class="settings-row">
@@ -574,7 +574,7 @@ function setVolume(v) {
   bgVideo.volume = Math.min(1, masterVolume);
 }
 function setTickVolume(v) {
-  v = Math.max(100, Math.min(1500, Math.round(v)));
+  v = Math.max(100, Math.min(3000, Math.round(v)));
   tickVolume = v / 100;
   document.getElementById("tick-volume-value").textContent = v + "%";
   document.getElementById("tick-volume-slider").value = v;
