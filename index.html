@@ -52,6 +52,15 @@
   }
   #settings-panel h3 { margin: 0 0 1.6vh; font-size: 16px; color: #ff8c2b; }
   .settings-row { margin-bottom: 1.8vh; }
+  .slider-row { display: flex; align-items: center; gap: 8px; }
+  .slider-row input[type="range"] { flex: 1; width: auto; }
+  .slider-number {
+    width: 58px; flex: 0 0 auto; text-align: center;
+    background: #241b30; border: 1px solid #4a3d5c; border-radius: 8px;
+    color: #f0e6d2; font-size: 13px; padding: 4px 2px;
+  }
+  .slider-number::-webkit-inner-spin-button,
+  .slider-number::-webkit-outer-spin-button { opacity: 1; }
   .settings-row label { display: block; font-size: 13px; margin-bottom: 0.6vh; color: #d8cbb6; }
   #volume-slider { width: 100%; }
   #volume-value { font-size: 12px; color: #b8afa0; }
@@ -244,7 +253,17 @@
     <h3>⚙️ 設定</h3>
     <div class="settings-row">
       <label>🔊 音量（<span id="volume-value">100%</span>）</label>
-      <input type="range" id="volume-slider" min="0" max="300" value="100" oninput="setVolume(this.value)">
+      <div class="slider-row">
+        <input type="range" id="volume-slider" min="0" max="300" value="100" oninput="setVolume(this.value)">
+        <input type="number" class="slider-number" id="volume-number" min="0" max="300" value="100" oninput="setVolume(this.value)">
+      </div>
+    </div>
+    <div class="settings-row">
+      <label>⏱️ 最後10秒倒數「搭搭搭」音量（<span id="tick-volume-value">500%</span>）</label>
+      <div class="slider-row">
+        <input type="range" id="tick-volume-slider" min="100" max="800" step="10" value="500" oninput="setTickVolume(this.value)">
+        <input type="number" class="slider-number" id="tick-volume-number" min="100" max="800" step="10" value="500" oninput="setTickVolume(this.value)">
+      </div>
     </div>
     <div class="settings-row">
       <label>🎬 結局影片預載狀態</label>
@@ -266,15 +285,24 @@
     </div>
     <div class="settings-row">
       <label>📜 說明視窗 — 中文字大小（<span id="story-zh-value">20px</span>）</label>
-      <input type="range" id="story-zh-slider" min="12" max="32" value="20" oninput="setStoryZhSize(this.value)">
+      <div class="slider-row">
+        <input type="range" id="story-zh-slider" min="12" max="32" value="20" oninput="setStoryZhSize(this.value)">
+        <input type="number" class="slider-number" id="story-zh-number" min="12" max="32" value="20" oninput="setStoryZhSize(this.value)">
+      </div>
     </div>
     <div class="settings-row">
       <label>📜 說明視窗 — 英文字大小（<span id="story-en-value">13px</span>）</label>
-      <input type="range" id="story-en-slider" min="8" max="24" value="13" oninput="setStoryEnSize(this.value)">
+      <div class="slider-row">
+        <input type="range" id="story-en-slider" min="8" max="24" value="13" oninput="setStoryEnSize(this.value)">
+        <input type="number" class="slider-number" id="story-en-number" min="8" max="24" value="13" oninput="setStoryEnSize(this.value)">
+      </div>
     </div>
     <div class="settings-row">
       <label>📜 說明視窗 — 寬度上限（<span id="story-width-value">550px</span>）</label>
-      <input type="range" id="story-width-slider" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
+      <div class="slider-row">
+        <input type="range" id="story-width-slider" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
+        <input type="number" class="slider-number" id="story-width-number" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
+      </div>
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
     <button class="settings-btn-full" style="border-color:#ff5c5c; color:#ff5c5c;" onclick="jumpToThirtySeconds()">⏩ 跳到倒數 30 秒（測試失敗結局用）</button>
@@ -535,11 +563,22 @@ function switchBgVideo(file, loop) {
 }
 
 /* ---------- 音量控制（0%~300%，預設 100%）---------- */
+let tickVolume = 5.0; // 500%，最後 10 秒倒數音效額外加成
 function setVolume(v) {
+  v = Math.max(0, Math.min(300, Math.round(v)));
   masterVolume = v / 100;
   document.getElementById("volume-value").textContent = v + "%";
+  document.getElementById("volume-slider").value = v;
+  document.getElementById("volume-number").value = v;
   if (bgmGainNode) bgmGainNode.gain.value = 0.35 * masterVolume;
   bgVideo.volume = Math.min(1, masterVolume);
+}
+function setTickVolume(v) {
+  v = Math.max(100, Math.min(800, Math.round(v)));
+  tickVolume = v / 100;
+  document.getElementById("tick-volume-value").textContent = v + "%";
+  document.getElementById("tick-volume-slider").value = v;
+  document.getElementById("tick-volume-number").value = v;
 }
 
 // 影片本身靜音自動播放；聲音音樂則於使用者第一次操作後播放。
@@ -563,7 +602,7 @@ function playRight() {
   const notes = [523, 659, 784, 1047];
   notes.forEach((f, i) => setTimeout(() => beep(f, 0.25, "sine", 0.15), i * 130));
 }
-function playTick() { beep(880, 0.05, "sine", 0.06); }
+function playTick() { beep(880, 0.05, "sine", 0.06 * tickVolume); }
 
 /* ---------- 設定浮動視窗 ---------- */
 function toggleSettings() {
@@ -674,16 +713,25 @@ function resetRoom() {
 
 /* ---------- 說明視窗字級 / 寬度調整 ---------- */
 function setStoryZhSize(v) {
+  v = Math.max(12, Math.min(32, Math.round(v)));
   document.documentElement.style.setProperty("--story-zh-size", v + "px");
   document.getElementById("story-zh-value").textContent = v + "px";
+  document.getElementById("story-zh-slider").value = v;
+  document.getElementById("story-zh-number").value = v;
 }
 function setStoryEnSize(v) {
+  v = Math.max(8, Math.min(24, Math.round(v)));
   document.documentElement.style.setProperty("--story-en-size", v + "px");
   document.getElementById("story-en-value").textContent = v + "px";
+  document.getElementById("story-en-slider").value = v;
+  document.getElementById("story-en-number").value = v;
 }
 function setStoryPanelWidth(v) {
+  v = Math.max(300, Math.min(900, Math.round(v)));
   document.documentElement.style.setProperty("--story-panel-width", v + "px");
   document.getElementById("story-width-value").textContent = v + "px";
+  document.getElementById("story-width-slider").value = v;
+  document.getElementById("story-width-number").value = v;
 }
 
 /* ---------- 打字機效果，播完後執行 callback ---------- */
