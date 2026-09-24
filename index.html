@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <title>萬聖節密室逃脫</title>
 <style>
+  :root {
+    --story-zh-size: 20px;
+    --story-en-size: 13px;
+    --story-panel-width: 550px;
+  }
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
   html, body { -webkit-touch-callout: none; }
   body {
@@ -63,15 +68,17 @@
   /* ---------- 說明浮動視窗 ---------- */
   #story-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: min(94vw, 550px); max-height: 80vh; overflow-y: auto;
+    width: min(94vw, var(--story-panel-width)); max-height: 80vh; overflow-y: auto;
     background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
     padding: 3vh min(4vw, 26px); z-index: 40; box-shadow: 0 10px 50px #000e;
   }
   #story-box {
     text-align: center;
-    font-size: clamp(12px, 1.8vh, 16px); line-height: 1.7;
+    line-height: 1.7;
   }
-  #story-cursor { animation: blink 0.8s infinite; }
+  .story-zh { font-size: var(--story-zh-size); }
+  .story-en { font-size: var(--story-en-size); }
+  #story-cursor { animation: blink 0.8s infinite; font-size: var(--story-zh-size); }
   @keyframes blink { 50% { opacity: 0; } }
 
   #story-confirm-btn {
@@ -254,6 +261,18 @@
          style="display:block; text-align:center; text-decoration:none; box-sizing:border-box;">
          ⬇️ 下載完整遊戲檔案（ZIP）
       </a>
+    </div>
+    <div class="settings-row">
+      <label>📜 說明視窗 — 中文字大小（<span id="story-zh-value">20px</span>）</label>
+      <input type="range" id="story-zh-slider" min="12" max="32" value="20" oninput="setStoryZhSize(this.value)">
+    </div>
+    <div class="settings-row">
+      <label>📜 說明視窗 — 英文字大小（<span id="story-en-value">13px</span>）</label>
+      <input type="range" id="story-en-slider" min="8" max="24" value="13" oninput="setStoryEnSize(this.value)">
+    </div>
+    <div class="settings-row">
+      <label>📜 說明視窗 — 寬度上限（<span id="story-width-value">550px</span>）</label>
+      <input type="range" id="story-width-slider" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
     <div id="reset-confirm-row" class="hidden">
@@ -628,6 +647,20 @@ function resetRoom() {
   startBackgroundAudio();
 }
 
+/* ---------- 說明視窗字級 / 寬度調整 ---------- */
+function setStoryZhSize(v) {
+  document.documentElement.style.setProperty("--story-zh-size", v + "px");
+  document.getElementById("story-zh-value").textContent = v + "px";
+}
+function setStoryEnSize(v) {
+  document.documentElement.style.setProperty("--story-en-size", v + "px");
+  document.getElementById("story-en-value").textContent = v + "px";
+}
+function setStoryPanelWidth(v) {
+  document.documentElement.style.setProperty("--story-panel-width", v + "px");
+  document.getElementById("story-width-value").textContent = v + "px";
+}
+
 /* ---------- 打字機效果，播完後執行 callback ---------- */
 function typeStory(text, onDone) {
   const box = document.getElementById("story-box");
@@ -635,9 +668,19 @@ function typeStory(text, onDone) {
   let i = 0;
   const zhSpeed = 23; // 中文（及其他符號）逐字間隔
   const enSpeed = 12; // 英文逐字母間隔（約中文的 2 倍速）
+  function classify(ch) { return /[a-zA-Z]/.test(ch) ? "story-en" : "story-zh"; }
+  function renderShown(count) {
+    let out = "";
+    for (let j = 0; j < count; j++) {
+      const ch = text[j];
+      if (ch === "\n") { out += "<br>"; continue; }
+      out += `<span class="${classify(ch)}">${ch}</span>`;
+    }
+    return out;
+  }
   function step() {
     if (i <= text.length) {
-      box.innerHTML = text.slice(0, i).replace(/\n/g, "<br>") + '<span id="story-cursor">▍</span>';
+      box.innerHTML = renderShown(i) + '<span id="story-cursor">▍</span>';
       const nextCh = text[i];
       const delay = nextCh && /[a-zA-Z]/.test(nextCh) ? enSpeed : zhSpeed;
       i++;
