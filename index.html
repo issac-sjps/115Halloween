@@ -322,7 +322,7 @@
     <img id="story-title-img" src="Title.png" alt="女巫實驗室的秘密"
          onerror="this.onerror=null; this.src='https://issac-sjps.github.io/115Halloween/Title.png';">
     <div id="story-box"></div>
-    <button id="story-confirm-btn" onclick="storyButtonClick()">確認後開始</button>
+    <button id="story-confirm-btn" onclick="storyButtonClick()">挑戰開始</button>
   </div>
   <button id="story-mini-btn" class="hidden" onclick="toggleStoryPanel()">📜 查看說明</button>
 
@@ -640,7 +640,7 @@ function jumpToThirtySeconds() {
     toggleSettings();
     beep(660, 0.12, "sine", 0.12);
   } else {
-    alert("請先按下「確認後開始」進入密碼倒數計時，再使用此測試按鈕。");
+    alert("請先按下「挑戰開始」進入密碼倒數計時，再使用此測試按鈕。");
   }
 }
 
@@ -707,7 +707,7 @@ function resetRoom() {
   document.getElementById("feedback").textContent = "";
 
   document.getElementById("story-box").innerHTML = "";
-  document.getElementById("story-confirm-btn").textContent = "確認後開始";
+  document.getElementById("story-confirm-btn").textContent = "挑戰開始";
   document.getElementById("story-confirm-btn").classList.add("ready");
   document.getElementById("story-confirm-btn").classList.remove("waiting");
   document.getElementById("story-mini-btn").classList.add("hidden");
