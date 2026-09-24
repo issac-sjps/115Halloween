@@ -196,10 +196,18 @@
   }
   #sos-card-overlay.show { opacity: 1; pointer-events: auto; }
   #sos-card-overlay img {
-    max-width: min(95vw, 720px); max-height: 92vh;
+    max-width: min(98vw, 1080px); max-height: 96vh;
     border-radius: 14px; box-shadow: 0 10px 50px #000e;
     border: 2px solid #ff8c2b;
   }
+  #sos-card-close {
+    position: fixed; z-index: 47; top: 2vh; right: 2vw;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #1c1c28ee; border: 2px solid #ff8c2b; color: #f0e6d2;
+    font-size: 20px; line-height: 1; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  #sos-card-close.show { display: flex; }
   #sos-card-hint {
     position: fixed; bottom: 2vh; left: 50%; transform: translateX(-50%);
     z-index: 46; color: #f0e6d2; font-size: clamp(12px, 1.8vh, 15px);
@@ -234,6 +242,18 @@
       <div id="ending-status-happy" style="font-size:12px; color:#d8cbb6;">🎉 過關動畫：⏳ 準備中…</div>
       <div id="ending-status-bad" style="font-size:12px; color:#d8cbb6; margin-top:4px;">💀 失敗動畫：⏳ 準備中…</div>
       <button class="settings-btn-full" style="margin-top:8px;" onclick="preloadAllEndings(true)">🔁 強制重新載入結局影片</button>
+    </div>
+    <div class="settings-row">
+      <label>💾 本機下載（避免現場等待影片載入）</label>
+      <p style="font-size:12px; color:#b8afa0; margin:0 0 8px; line-height:1.6;">
+        如果現場網路不穩，建議上課前先下載整包遊戲到電腦，解壓縮後直接用瀏覽器打開資料夾裡的 <code>index.html</code>。
+        影片、音效都在本機讀取，不用等網路下載，就不會卡黑畫面。
+      </p>
+      <a href="https://github.com/issac-sjps/115Halloween/archive/refs/heads/main.zip"
+         target="_blank" rel="noopener" class="settings-btn-full"
+         style="display:block; text-align:center; text-decoration:none; box-sizing:border-box;">
+         ⬇️ 下載完整遊戲檔案（ZIP）
+      </a>
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
     <div id="reset-confirm-row" class="hidden">
@@ -273,7 +293,8 @@
   <div id="sos-card-overlay" onclick="closeSosCard()">
     <img id="sos-card-img" src="" alt="提示卡片">
   </div>
-  <div id="sos-card-hint">💡 再點一次藥水瓶，收起提示卡</div>
+  <button id="sos-card-close" onclick="closeSosCard()">✕</button>
+  <div id="sos-card-hint">💡 點空白處、右上角 ✕，或再點一次藥水瓶，收起提示卡</div>
 </div>
 
 <script>
@@ -375,6 +396,7 @@ function clearSosPotions() {
   }
   document.getElementById("sos-card-overlay").classList.remove("show");
   document.getElementById("sos-card-hint").classList.remove("show");
+  document.getElementById("sos-card-close").classList.remove("show");
 }
 function toggleSosCard(n) {
   if (sosOpenIndex === n) {
@@ -383,6 +405,7 @@ function toggleSosCard(n) {
     document.getElementById("sos-card-img").src = `card${n}.png`;
     document.getElementById("sos-card-overlay").classList.add("show");
     document.getElementById("sos-card-hint").classList.add("show");
+    document.getElementById("sos-card-close").classList.add("show");
     document.getElementById(`sos-btn-${n}`).classList.add("opened");
     sosOpenIndex = n;
     beep(720, 0.12, "sine", 0.1);
@@ -391,6 +414,7 @@ function toggleSosCard(n) {
 function closeSosCard() {
   document.getElementById("sos-card-overlay").classList.remove("show");
   document.getElementById("sos-card-hint").classList.remove("show");
+  document.getElementById("sos-card-close").classList.remove("show");
   sosOpenIndex = null;
 }
 
