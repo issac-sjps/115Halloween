@@ -82,9 +82,11 @@
     background: #100c16f5; border: 1px solid #4a3d5c; border-radius: 14px;
     padding: 3vh min(4vw, 26px); z-index: 40; box-shadow: 0 10px 50px #000e;
   }
-  #story-title-img {
-    display: block; width: 100%; max-width: 100%; height: auto;
-    margin: 0 auto 1.6vh; filter: drop-shadow(0 4px 14px #000c);
+  #site-title-img {
+    position: fixed; top: 3%; left: 50%; transform: translateX(-50%);
+    width: min(92vw, 720px); max-width: 92vw; height: auto;
+    z-index: 5; pointer-events: none;
+    filter: drop-shadow(0 4px 14px #000c);
   }
   #story-box {
     text-align: center;
@@ -241,6 +243,9 @@
 </head>
 <body>
 
+<img id="site-title-img" src="Title.png" alt="女巫實驗室的秘密"
+     onerror="this.onerror=null; this.src='https://issac-sjps.github.io/115Halloween/Title.png';">
+
 <!-- ============ 教室大螢幕 ============ -->
 <div id="room-screen">
   <video id="bg-video" class="bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
@@ -319,8 +324,6 @@
   </div>
 
   <div id="story-panel">
-    <img id="story-title-img" src="Title.png" alt="女巫實驗室的秘密"
-         onerror="this.onerror=null; this.src='https://issac-sjps.github.io/115Halloween/Title.png';">
     <div id="story-box"></div>
     <button id="story-confirm-btn" onclick="storyButtonClick()">挑戰開始</button>
   </div>
@@ -560,6 +563,8 @@ function switchBgVideo(file, loop) {
   bgVideo.loop = !!loop;
   bgVideo.muted = !!loop; // 一般背景影片靜音；過關/失敗影片播放聲音
   bgVideo.volume = Math.min(1, masterVolume);
+  const titleImg = document.getElementById("site-title-img");
+  if (titleImg) titleImg.style.display = loop ? "" : "none"; // 過關/失敗結局影片全螢幕播放時，暫時隱藏標題圖
   let src = BG_BASE + file;
   if (file === ENDING_FILES.happy && endingCache.happy.state === "ready") src = endingCache.happy.url;
   if (file === ENDING_FILES.bad && endingCache.bad.state === "ready") src = endingCache.bad.url;
