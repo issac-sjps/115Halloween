@@ -8,6 +8,7 @@
     --story-zh-size: 20px;
     --story-en-size: 13px;
     --story-panel-width: 550px;
+    --title-scale: 100;
   }
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
   html, body { -webkit-touch-callout: none; }
@@ -83,9 +84,10 @@
     padding: 3vh min(4vw, 26px); z-index: 40; box-shadow: 0 10px 50px #000e;
   }
   #site-title-img {
-    position: fixed; top: 3%; left: 50%; transform: translateX(-50%);
-    width: min(92vw, 720px); max-width: 92vw; height: auto;
-    z-index: 5; pointer-events: none;
+    position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+    width: calc(min(92vw, 720px) * var(--title-scale, 100) / 100);
+    max-width: 96vw; height: auto;
+    z-index: 42; pointer-events: none;
     filter: drop-shadow(0 4px 14px #000c);
   }
   #story-box {
@@ -311,6 +313,13 @@
       <div class="slider-row">
         <input type="range" id="story-width-slider" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
         <input type="number" class="slider-number" id="story-width-number" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
+      </div>
+    </div>
+    <div class="settings-row">
+      <label>🖼️ 頂部標題圖片大小（<span id="title-scale-value">100%</span>）</label>
+      <div class="slider-row">
+        <input type="range" id="title-scale-slider" min="20" max="150" step="5" value="100" oninput="setTitleScale(this.value)">
+        <input type="number" class="slider-number" id="title-scale-number" min="20" max="150" step="5" value="100" oninput="setTitleScale(this.value)">
       </div>
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
@@ -743,6 +752,13 @@ function setStoryPanelWidth(v) {
   document.getElementById("story-width-value").textContent = v + "px";
   document.getElementById("story-width-slider").value = v;
   document.getElementById("story-width-number").value = v;
+}
+function setTitleScale(v) {
+  v = Math.max(20, Math.min(150, Math.round(v)));
+  document.documentElement.style.setProperty("--title-scale", v);
+  document.getElementById("title-scale-value").textContent = v + "%";
+  document.getElementById("title-scale-slider").value = v;
+  document.getElementById("title-scale-number").value = v;
 }
 
 /* ---------- 打字機效果，播完後執行 callback ---------- */
