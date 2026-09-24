@@ -8,7 +8,7 @@
     --story-zh-size: 20px;
     --story-en-size: 13px;
     --story-panel-width: 550px;
-    --title-scale: 100;
+    --title-scale: 95;
   }
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
   html, body { -webkit-touch-callout: none; }
@@ -100,14 +100,29 @@
   @keyframes blink { 50% { opacity: 0; } }
 
   #story-confirm-btn {
-    display: block; margin: 2.2vh auto 0; padding: 10px 28px;
-    font-size: clamp(14px, 2vh, 17px); background: #ff8c2b; color: #1c1c28;
-    border: none; border-radius: 10px; cursor: pointer; font-weight: bold;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    margin: 2.2vh auto 0; padding: 0; background: none; border: none;
+    cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
   #story-confirm-btn.ready { opacity: 1; pointer-events: auto; }
-  #story-confirm-btn.waiting { opacity: 0.5; pointer-events: none; }
-  #story-confirm-btn:active { transform: scale(0.96); }
+  #story-confirm-btn.waiting { pointer-events: none; }
+  #story-confirm-btn:active #story-confirm-img { transform: scale(0.94); }
+  #story-confirm-img {
+    width: clamp(130px, 20vw, 220px); height: auto; display: block;
+    filter: drop-shadow(0 0 18px #b565ff99) drop-shadow(0 6px 20px #000c);
+    animation: magicPulse 2.4s ease-in-out infinite;
+    transition: transform 0.15s, filter 0.3s;
+  }
+  #story-confirm-btn.waiting #story-confirm-img { filter: grayscale(0.5) brightness(0.7); animation-play-state: paused; }
+  @keyframes magicPulse {
+    0%, 100% { filter: drop-shadow(0 0 14px #b565ff88) drop-shadow(0 6px 20px #000c); }
+    50% { filter: drop-shadow(0 0 30px #d9a8ffcc) drop-shadow(0 6px 20px #000c); }
+  }
+  #story-confirm-label {
+    font-size: clamp(13px, 1.9vh, 16px); color: #f0e6d2; font-weight: bold;
+    background: #1c1c28cc; padding: 3px 16px; border-radius: 20px;
+  }
+  #story-confirm-label.hidden { display: none; }
 
   #story-mini-btn {
     position: fixed; bottom: 2.5vh; right: 2vw; z-index: 12;
@@ -316,10 +331,10 @@
       </div>
     </div>
     <div class="settings-row">
-      <label>🖼️ 頂部標題圖片大小（<span id="title-scale-value">100%</span>）</label>
+      <label>🖼️ 頂部標題圖片大小（<span id="title-scale-value">95%</span>）</label>
       <div class="slider-row">
-        <input type="range" id="title-scale-slider" min="20" max="150" step="5" value="100" oninput="setTitleScale(this.value)">
-        <input type="number" class="slider-number" id="title-scale-number" min="20" max="150" step="5" value="100" oninput="setTitleScale(this.value)">
+        <input type="range" id="title-scale-slider" min="20" max="150" step="5" value="95" oninput="setTitleScale(this.value)">
+        <input type="number" class="slider-number" id="title-scale-number" min="20" max="150" step="5" value="95" oninput="setTitleScale(this.value)">
       </div>
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
@@ -334,7 +349,11 @@
 
   <div id="story-panel">
     <div id="story-box"></div>
-    <button id="story-confirm-btn" onclick="storyButtonClick()">挑戰開始</button>
+    <button id="story-confirm-btn" onclick="storyButtonClick()">
+      <img id="story-confirm-img" src="startgame.png" alt="挑戰開始"
+           onerror="this.onerror=null; this.src='https://issac-sjps.github.io/115Halloween/startgame.png';">
+      <span id="story-confirm-label" class="hidden"></span>
+    </button>
   </div>
   <button id="story-mini-btn" class="hidden" onclick="toggleStoryPanel()">📜 查看說明</button>
 
@@ -671,12 +690,14 @@ function storyButtonClick() {
 function startStoryTyping() {
   storyStage = "typing";
   const btn = document.getElementById("story-confirm-btn");
+  const label = document.getElementById("story-confirm-label");
   btn.classList.add("waiting");
-  btn.textContent = "播放中…";
+  label.textContent = "播放中…";
+  label.classList.remove("hidden");
   typeStory(ROOM.story, () => {
     storyTimeoutId = setTimeout(() => {
       storyStage = "done";
-      btn.textContent = "關閉";
+      label.textContent = "關閉";
       btn.classList.remove("waiting");
       document.getElementById("story-panel").classList.add("hidden");
       document.getElementById("story-mini-btn").classList.remove("hidden");
@@ -721,7 +742,8 @@ function resetRoom() {
   document.getElementById("feedback").textContent = "";
 
   document.getElementById("story-box").innerHTML = "";
-  document.getElementById("story-confirm-btn").textContent = "挑戰開始";
+  document.getElementById("story-confirm-label").textContent = "";
+  document.getElementById("story-confirm-label").classList.add("hidden");
   document.getElementById("story-confirm-btn").classList.add("ready");
   document.getElementById("story-confirm-btn").classList.remove("waiting");
   document.getElementById("story-mini-btn").classList.add("hidden");
