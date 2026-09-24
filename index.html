@@ -88,6 +88,7 @@
     opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
   #story-confirm-btn.ready { opacity: 1; pointer-events: auto; }
+  #story-confirm-btn.waiting { opacity: 0.5; pointer-events: none; }
   #story-confirm-btn:active { transform: scale(0.96); }
 
   #story-mini-btn {
@@ -275,6 +276,7 @@
       <input type="range" id="story-width-slider" min="300" max="900" value="550" oninput="setStoryPanelWidth(this.value)">
     </div>
     <button id="reset-request-btn" class="settings-btn-full" onclick="requestReset()">🔄 重置遊戲</button>
+    <button class="settings-btn-full" style="border-color:#ff5c5c; color:#ff5c5c;" onclick="jumpToThirtySeconds()">⏩ 跳到倒數 30 秒（測試失敗結局用）</button>
     <div id="reset-confirm-row" class="hidden">
       <p>確定要重置嗎？目前進度將會清除。</p>
       <button id="confirm-reset-btn" class="settings-btn-full" onclick="confirmReset()">✅ 確認重置</button>
@@ -387,7 +389,7 @@ let timerInterval = null;
 let countdownInterval = null;
 let storyTimeoutId = null;
 let pwInput = "";
-let storyConfirmed = false;
+let storyStage = "idle"; // idle -> typing -> done
 let resetGuard = false;
 
 /* ---------- SOS 提示藥水 ---------- */
@@ -584,20 +586,43 @@ function confirmReset() {
   setTimeout(() => { resetGuard = false; }, 1500);
 }
 
+/* ---------- 測試用：跳到倒數 30 秒（方便老師預覽失敗結局） ---------- */
+function jumpToThirtySeconds() {
+  if (timerInterval && !document.getElementById("challenge-area").classList.contains("hidden")) {
+    timeLeft = Math.min(timeLeft, 30);
+    updateTimerDisplay();
+    toggleSettings();
+    beep(660, 0.12, "sine", 0.12);
+  } else {
+    alert("請先按下「確認後開始」進入密碼倒數計時，再使用此測試按鈕。");
+  }
+}
+
 /* ---------- 說明浮動視窗 ---------- */
 function storyButtonClick() {
-  if (!storyConfirmed) {
-    confirmStory();
+  if (storyStage === "idle") {
+    startStoryTyping();
+  } else if (storyStage === "typing") {
+    return; // 播放中，忽略點擊
   } else {
     document.getElementById("story-panel").classList.add("hidden");
   }
 }
-function confirmStory() {
-  storyConfirmed = true;
-  document.getElementById("story-confirm-btn").textContent = "關閉";
-  document.getElementById("story-panel").classList.add("hidden");
-  document.getElementById("story-mini-btn").classList.remove("hidden");
-  beginCountdown();
+function startStoryTyping() {
+  storyStage = "typing";
+  const btn = document.getElementById("story-confirm-btn");
+  btn.classList.add("waiting");
+  btn.textContent = "播放中…";
+  typeStory(ROOM.story, () => {
+    storyTimeoutId = setTimeout(() => {
+      storyStage = "done";
+      btn.textContent = "關閉";
+      btn.classList.remove("waiting");
+      document.getElementById("story-panel").classList.add("hidden");
+      document.getElementById("story-mini-btn").classList.remove("hidden");
+      beginCountdown();
+    }, 1000);
+  });
 }
 function toggleStoryPanel() {
   const panel = document.getElementById("story-panel");
@@ -625,7 +650,7 @@ function resetRoom() {
 
   timeLeft = ROOM.timeLimit;
   pwInput = "";
-  storyConfirmed = false;
+  storyStage = "idle";
   const colorKeys = Object.keys(COLOR_CODES);
   currentColor = colorKeys[Math.floor(Math.random() * colorKeys.length)];
 
@@ -635,14 +660,13 @@ function resetRoom() {
   document.getElementById("end-screen").className = "hidden";
   document.getElementById("feedback").textContent = "";
 
+  document.getElementById("story-box").innerHTML = "";
   document.getElementById("story-confirm-btn").textContent = "確認後開始";
-  document.getElementById("story-confirm-btn").classList.remove("ready");
+  document.getElementById("story-confirm-btn").classList.add("ready");
+  document.getElementById("story-confirm-btn").classList.remove("waiting");
   document.getElementById("story-mini-btn").classList.add("hidden");
   document.getElementById("story-panel").classList.remove("hidden");
 
-  typeStory(ROOM.story, () => {
-    document.getElementById("story-confirm-btn").classList.add("ready");
-  });
   buildKeypad();
   startBackgroundAudio();
 }
@@ -685,8 +709,9 @@ function typeStory(text, onDone) {
       const delay = nextCh && /[a-zA-Z]/.test(nextCh) ? enSpeed : zhSpeed;
       i++;
       storyTimeoutId = setTimeout(step, delay);
-    } else if (onDone) {
-      onDone();
+    } else {
+      box.innerHTML = renderShown(text.length); // 移除閃爍游標
+      if (onDone) onDone();
     }
   }
   step();
