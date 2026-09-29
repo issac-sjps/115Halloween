@@ -540,13 +540,15 @@ function closeSosCard() {
 }
 
 let audioCtx = null;
-let bgmGainNode = null;
 let masterVolume = 1.0; // 100%
 const bgVideo = document.getElementById("bg-video");
 const bgm = document.getElementById("bgm");
 let backgroundAudioStarted = false;
 
-bgm.volume = 1; // 實際音量交由 GainNode 控制
+bgm.volume = Math.min(1, 0.35 * masterVolume); // 直接用 <audio> 本身的音量，不透過 Web Audio API
+// 注意：本機以 file:// 開啟時，若透過 createMediaElementSource() 把 <audio> 接進 AudioContext，
+// 瀏覽器會視為跨來源污染（tainted），導致明明顯示「播放中」卻完全沒有聲音。
+// 因此背景音樂固定用 <audio> 元素原生播放＋音量控制，AudioContext 只用來合成音效（beep）。
 
 /* ---------- 背景音樂載入 / 播放狀態診斷 ---------- */
 function updateBgmStatusUI(text) {
@@ -557,7 +559,7 @@ const BGM_ERROR_CODES = { 1: "讀取被中止", 2: "網路錯誤", 3: "解碼錯
 bgm.addEventListener("loadstart", () => { updateBgmStatusUI("⏳ 開始載入音樂檔案…"); console.log("[BGM] loadstart, src =", bgm.currentSrc); });
 bgm.addEventListener("loadeddata", () => { updateBgmStatusUI("✅ 音樂檔案已載入完成"); console.log("[BGM] loadeddata, src =", bgm.currentSrc); });
 bgm.addEventListener("canplaythrough", () => { updateBgmStatusUI("✅ 已完整緩衝，隨時可播放"); console.log("[BGM] canplaythrough"); });
-bgm.addEventListener("playing", () => { updateBgmStatusUI("▶️ 播放中"); console.log("[BGM] playing, currentTime =", bgm.currentTime, "volume(gain) =", bgmGainNode ? bgmGainNode.gain.value : "N/A"); });
+bgm.addEventListener("playing", () => { updateBgmStatusUI("▶️ 播放中"); console.log("[BGM] playing, currentTime =", bgm.currentTime, "volume =", bgm.volume); });
 bgm.addEventListener("pause", () => { console.log("[BGM] paused"); });
 bgm.addEventListener("error", () => {
   const err = bgm.error;
@@ -581,12 +583,6 @@ function testBgmPlayback() {
 function getAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    try {
-      const src = audioCtx.createMediaElementSource(bgm);
-      bgmGainNode = audioCtx.createGain();
-      bgmGainNode.gain.value = 0.35 * masterVolume;
-      src.connect(bgmGainNode).connect(audioCtx.destination);
-    } catch (e) { /* 已連接過或不支援時忽略 */ }
   }
   return audioCtx;
 }
@@ -621,6 +617,7 @@ function updateEndingStatusUI() {
     if (st === "ready") text = `${label}：✅ 已載入完成，隨時可播放`;
     else if (st === "loading") text = `${label}：⏳ 載入中…`;
     else if (st === "error") text = `${label}：❌ 載入失敗，請檢查網路後重試`;
+    else if (st === "skipped") text = `${label}：🔵 本機模式（file://），略過預先快取，播放時直接讀取本機檔案`;
     else text = `${label}：⏳ 準備中…`;
     el.textContent = text;
   });
@@ -628,8 +625,15 @@ function updateEndingStatusUI() {
 
 function preloadEndingVideo(key, force) {
   const info = endingCache[key];
-  if (!force && (info.state === "loading" || info.state === "ready")) return;
+  if (!force && (info.state === "loading" || info.state === "ready" || info.state === "skipped")) return;
   if (force && info.url) { URL.revokeObjectURL(info.url); info.url = null; }
+  if (location.protocol === "file:") {
+    // 本機以 file:// 開啟時，瀏覽器會擋掉 fetch() 讀取本機檔案（CORS 限制），
+    // 但影片本身仍可用 <video src> 直接讀取本機硬碟播放，讀取速度也不需要預先快取，直接略過。
+    info.state = "skipped";
+    updateEndingStatusUI();
+    return;
+  }
   info.state = "loading";
   updateEndingStatusUI();
   fetch(BG_BASE + ENDING_FILES[key])
@@ -640,7 +644,7 @@ function preloadEndingVideo(key, force) {
       updateEndingStatusUI();
     })
     .catch(() => {
-      // 相對路徑抓取失敗（例如本機以 file:// 開啟時瀏覽器會擋 fetch），改嘗試線上絕對網址
+      // 相對路徑抓取失敗，改嘗試線上絕對網址（需要網路，且該檔案要確實存在於該網址）
       fetch(BG_FALLBACK_BASE + ENDING_FILES[key])
         .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.blob(); })
         .then(blob => {
@@ -691,7 +695,7 @@ function setVolume(v) {
   document.getElementById("volume-value").textContent = v + "%";
   document.getElementById("volume-slider").value = v;
   document.getElementById("volume-number").value = v;
-  if (bgmGainNode) bgmGainNode.gain.value = 0.35 * masterVolume;
+  bgm.volume = Math.min(1, 0.35 * masterVolume);
   bgVideo.volume = Math.min(1, masterVolume);
 }
 function setTickVolume(v) {
