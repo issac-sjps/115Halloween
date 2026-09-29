@@ -280,10 +280,12 @@
 <!-- ============ 教室大螢幕 ============ -->
 <div id="room-screen">
   <video id="bg-video" class="bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="https://issac-sjps.github.io/115Halloween/witch-bg.mp4" type="video/mp4">
+    <source src="witch-bg.mp4" type="video/mp4"
+            onerror="this.parentElement.src='https://issac-sjps.github.io/115Halloween/witch-bg.mp4'; this.parentElement.load();">
   </video>
   <audio id="bgm" preload="auto" loop>
-    <source src="https://issac-sjps.github.io/115Halloween/bgm.mp3" type="audio/mpeg">
+    <source src="bgm.mp3" type="audio/mpeg"
+            onerror="this.parentElement.src='https://issac-sjps.github.io/115Halloween/bgm.mp3'; this.parentElement.load();">
   </audio>
 
   <button id="fullscreen-btn" onclick="enterFullscreen()">🖥️ 全螢幕 <small>(ESC離開)</small></button>
@@ -419,7 +421,8 @@ const COLOR_CODES = {
   blue:   { name: "藍色", code: "5267", cls: "clue-blue" },
   green:  { name: "綠色", code: "9453", cls: "clue-green" }
 };
-const BG_BASE = "https://issac-sjps.github.io/115Halloween/";
+const BG_BASE = ""; // 相對路徑：同一資料夾下（GitHub Pages 與本機下載皆可用）
+const BG_FALLBACK_BASE = "https://issac-sjps.github.io/115Halloween/"; // 相對路徑失敗時的備援（需要網路）
 /* ================================================================ */
 
 /* ================= 鎖定機制：禁右鍵 / 全螢幕 / 鍵盤白名單 ================= */
@@ -599,8 +602,18 @@ function preloadEndingVideo(key, force) {
       updateEndingStatusUI();
     })
     .catch(() => {
-      info.state = "error";
-      updateEndingStatusUI();
+      // 相對路徑抓取失敗（例如本機以 file:// 開啟時瀏覽器會擋 fetch），改嘗試線上絕對網址
+      fetch(BG_FALLBACK_BASE + ENDING_FILES[key])
+        .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.blob(); })
+        .then(blob => {
+          info.url = URL.createObjectURL(blob);
+          info.state = "ready";
+          updateEndingStatusUI();
+        })
+        .catch(() => {
+          info.state = "error";
+          updateEndingStatusUI();
+        });
     });
 }
 
@@ -620,6 +633,14 @@ function switchBgVideo(file, loop) {
   if (file === ENDING_FILES.happy && endingCache.happy.state === "ready") src = endingCache.happy.url;
   if (file === ENDING_FILES.bad && endingCache.bad.state === "ready") src = endingCache.bad.url;
   bgVideo.src = src;
+  bgVideo.onerror = () => {
+    if (!bgVideo.src.includes(BG_FALLBACK_BASE)) {
+      bgVideo.onerror = null;
+      bgVideo.src = BG_FALLBACK_BASE + file;
+      bgVideo.load();
+      bgVideo.play().catch(() => {});
+    }
+  };
   bgVideo.load();
   bgVideo.play().catch(() => {});
 }
