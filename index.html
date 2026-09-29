@@ -308,6 +308,14 @@
       </div>
     </div>
     <div class="settings-row">
+      <label>🎵 背景音樂狀態</label>
+      <div id="bgm-status" style="font-size:12px; color:#d8cbb6;">⏳ 準備中…</div>
+      <button class="settings-btn-full" style="margin-top:8px;" onclick="testBgmPlayback()">🔊 手動測試播放背景音樂</button>
+      <p style="font-size:11px; color:#8a8175; margin:6px 0 0; line-height:1.5;">
+        如果一直顯示「準備中」或播放失敗，請按 F12 打開瀏覽器主控台（Console）查看 [BGM] 開頭的訊息，把內容截圖給我。
+      </p>
+    </div>
+    <div class="settings-row">
       <label>🎬 結局影片預載狀態</label>
       <div id="ending-status-happy" style="font-size:12px; color:#d8cbb6;">🎉 過關動畫：⏳ 準備中…</div>
       <div id="ending-status-bad" style="font-size:12px; color:#d8cbb6; margin-top:4px;">💀 失敗動畫：⏳ 準備中…</div>
@@ -540,6 +548,36 @@ let backgroundAudioStarted = false;
 
 bgm.volume = 1; // 實際音量交由 GainNode 控制
 
+/* ---------- 背景音樂載入 / 播放狀態診斷 ---------- */
+function updateBgmStatusUI(text) {
+  const el = document.getElementById("bgm-status");
+  if (el) el.textContent = text;
+}
+const BGM_ERROR_CODES = { 1: "讀取被中止", 2: "網路錯誤", 3: "解碼錯誤", 4: "格式不支援或路徑找不到檔案" };
+bgm.addEventListener("loadstart", () => { updateBgmStatusUI("⏳ 開始載入音樂檔案…"); console.log("[BGM] loadstart, src =", bgm.currentSrc); });
+bgm.addEventListener("loadeddata", () => { updateBgmStatusUI("✅ 音樂檔案已載入完成"); console.log("[BGM] loadeddata, src =", bgm.currentSrc); });
+bgm.addEventListener("canplaythrough", () => { updateBgmStatusUI("✅ 已完整緩衝，隨時可播放"); console.log("[BGM] canplaythrough"); });
+bgm.addEventListener("playing", () => { updateBgmStatusUI("▶️ 播放中"); console.log("[BGM] playing, currentTime =", bgm.currentTime, "volume(gain) =", bgmGainNode ? bgmGainNode.gain.value : "N/A"); });
+bgm.addEventListener("pause", () => { console.log("[BGM] paused"); });
+bgm.addEventListener("error", () => {
+  const err = bgm.error;
+  const codeMsg = err ? (BGM_ERROR_CODES[err.code] || "未知錯誤") : "未知錯誤";
+  updateBgmStatusUI(`❌ 載入失敗（${codeMsg}），請確認 bgm.mp3 跟 index.html 在同一資料夾`);
+  console.error("[BGM] error event. code =", err ? err.code : "?", "message =", codeMsg, "currentSrc =", bgm.currentSrc);
+});
+function testBgmPlayback() {
+  console.log("[BGM] manual test clicked. currentSrc =", bgm.currentSrc, "readyState =", bgm.readyState, "networkState =", bgm.networkState, "paused =", bgm.paused, "muted =", bgm.muted);
+  getAudio();
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+  bgm.play().then(() => {
+    updateBgmStatusUI("▶️ 手動測試播放成功！如果還是聽不到，請檢查系統/瀏覽器音量。");
+    console.log("[BGM] manual play() succeeded");
+  }).catch(e => {
+    updateBgmStatusUI(`❌ 播放被阻擋：${e.name} - ${e.message}`);
+    console.error("[BGM] manual play() failed:", e);
+  });
+}
+
 function getAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -556,7 +594,7 @@ function getAudio() {
 function startBackgroundAudio() {
   getAudio();
   if (!backgroundAudioStarted) backgroundAudioStarted = true;
-  bgm.play().catch(() => { backgroundAudioStarted = false; });
+  bgm.play().catch(e => { backgroundAudioStarted = false; console.warn("[BGM] autoplay blocked, waiting for user gesture:", e.name, e.message); });
   if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
 }
 
