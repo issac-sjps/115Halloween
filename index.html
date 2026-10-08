@@ -817,6 +817,30 @@ function toggleStoryPanel() {
 preloadAllEndings();
 resetRoom();
 
+/* ---------- 顏色抽籤：四色輪流不重複 ----------
+   第 1 次：4 色隨機抽 1；第 2 次：剩 3 色抽 1；第 3 次：剩 2 色抽 1；
+   第 4 次：剩下最後 1 色；第 5 次起：重新 4 色隨機抽 1（循環）。
+   剩餘的顏色會存在 localStorage，重新整理頁面也不會重來。 */
+const COLOR_BAG_KEY = "halloween_color_bag";
+function loadColorBag() {
+  try {
+    const bag = JSON.parse(localStorage.getItem(COLOR_BAG_KEY));
+    if (Array.isArray(bag) && bag.every(k => k in COLOR_CODES)) return bag;
+  } catch (e) {}
+  return [];
+}
+function saveColorBag(bag) {
+  try { localStorage.setItem(COLOR_BAG_KEY, JSON.stringify(bag)); } catch (e) {}
+}
+function drawNextColor() {
+  let bag = loadColorBag();
+  if (bag.length === 0) bag = Object.keys(COLOR_CODES); // 抽完了 → 重新放回四色
+  const i = Math.floor(Math.random() * bag.length);
+  const picked = bag.splice(i, 1)[0];
+  saveColorBag(bag);
+  return picked;
+}
+
 function resetRoom() {
   clearInterval(timerInterval);
   clearInterval(countdownInterval);
@@ -835,8 +859,7 @@ function resetRoom() {
   timeLeft = ROOM.timeLimit;
   pwInput = "";
   storyStage = "idle";
-  const colorKeys = Object.keys(COLOR_CODES);
-  currentColor = colorKeys[Math.floor(Math.random() * colorKeys.length)];
+  currentColor = drawNextColor();
 
   document.getElementById("countdown-hint").textContent = "";
   document.getElementById("story-final-countdown").textContent = "";
