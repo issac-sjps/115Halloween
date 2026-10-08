@@ -8,7 +8,7 @@
     --story-zh-size: 20px;
     --story-en-size: 13px;
     --story-panel-width: 550px;
-    --title-scale: 95;
+    --title-scale: 80;
     --confirm-img-scale: 200;
   }
   * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
@@ -355,10 +355,10 @@
       </div>
     </div>
     <div class="settings-row">
-      <label>🖼️ 頂部標題圖片大小（<span id="title-scale-value">95%</span>）</label>
+      <label>🖼️ 頂部標題圖片大小（<span id="title-scale-value">80%</span>）</label>
       <div class="slider-row">
-        <input type="range" id="title-scale-slider" min="20" max="150" step="5" value="95" oninput="setTitleScale(this.value)">
-        <input type="number" class="slider-number" id="title-scale-number" min="20" max="150" step="5" value="95" oninput="setTitleScale(this.value)">
+        <input type="range" id="title-scale-slider" min="20" max="150" step="5" value="80" oninput="setTitleScale(this.value)">
+        <input type="number" class="slider-number" id="title-scale-number" min="20" max="150" step="5" value="80" oninput="setTitleScale(this.value)">
       </div>
     </div>
     <div class="settings-row">
@@ -819,7 +819,7 @@ resetRoom();
 
 /* ---------- 顏色抽籤：四色輪流不重複 ----------
    第 1 次：4 色隨機抽 1；第 2 次：剩 3 色抽 1；第 3 次：剩 2 色抽 1；
-   第 4 次：剩下最後 1 色；第 5 次起：重新 4 色隨機抽 1（循環）。
+   第 4 次：剩下最後 1 色；第 5 次起：重新 4 色隨機抽 1（但不會與上一次同色），循環。
    剩餘的顏色會存在 localStorage，重新整理頁面也不會重來。 */
 const COLOR_BAG_KEY = "halloween_color_bag";
 function loadColorBag() {
@@ -832,12 +832,24 @@ function loadColorBag() {
 function saveColorBag(bag) {
   try { localStorage.setItem(COLOR_BAG_KEY, JSON.stringify(bag)); } catch (e) {}
 }
+const LAST_COLOR_KEY = "halloween_last_color";
 function drawNextColor() {
   let bag = loadColorBag();
-  if (bag.length === 0) bag = Object.keys(COLOR_CODES); // 抽完了 → 重新放回四色
-  const i = Math.floor(Math.random() * bag.length);
-  const picked = bag.splice(i, 1)[0];
+  let last = null;
+  try { last = localStorage.getItem(LAST_COLOR_KEY); } catch (e) {}
+  let candidates;
+  if (bag.length === 0) {
+    // 抽完了 → 重新放回四色，但這一輪第一次不可與上一次（第 4 次）同色
+    bag = Object.keys(COLOR_CODES);
+    candidates = bag.filter(k => k !== last);
+    if (candidates.length === 0) candidates = bag;
+  } else {
+    candidates = bag;
+  }
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+  bag.splice(bag.indexOf(picked), 1);
   saveColorBag(bag);
+  try { localStorage.setItem(LAST_COLOR_KEY, picked); } catch (e) {}
   return picked;
 }
 
@@ -910,7 +922,17 @@ function setTitleScale(v) {
   document.getElementById("title-scale-value").textContent = v + "%";
   document.getElementById("title-scale-slider").value = v;
   document.getElementById("title-scale-number").value = v;
+  try { localStorage.setItem("halloween_title_scale", String(v)); } catch (e) {} // 記住大小，下次開啟沿用
 }
+// 開啟頁面時，讀取上次儲存的標題圖片大小（沒有就用預設 80%）
+(function () {
+  let saved = 80;
+  try {
+    const t = parseInt(localStorage.getItem("halloween_title_scale"), 10);
+    if (!isNaN(t)) saved = t;
+  } catch (e) {}
+  setTitleScale(saved);
+})();
 function setConfirmScale(v) {
   v = Math.max(20, Math.min(500, Math.round(v)));
   document.documentElement.style.setProperty("--confirm-img-scale", v);
