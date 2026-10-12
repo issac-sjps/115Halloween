@@ -493,7 +493,7 @@ let storyStage = "idle"; // idle -> typing -> done
 let resetGuard = false;
 
 /* ---------- SOS 提示藥水 ---------- */
-const SOS_SCHEDULE = [30000, 60000, 90000]; // 30秒 / 1分鐘 / 1分30秒
+const SOS_SCHEDULE = [0, 0, 0]; // 挑戰一開始，三個提示藥水同時出現（原本：30秒 / 1分鐘 / 1分30秒）
 let sosTimeouts = [];
 let sosOpenIndex = null;
 
