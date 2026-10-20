@@ -872,6 +872,7 @@ function resetRoom() {
   switchBgVideo("witch-bg.mp4", true);
   bgVideo.onended = null;
   bgVideo.onloadedmetadata = null;
+  bgVideo.ontimeupdate = null;
   clearTimeout(restartFallbackId);
   document.getElementById("restart-btn").classList.remove("show");
 
@@ -1097,6 +1098,9 @@ function showEnd(success) {
   // 保險機制：萬一影片卡住、載入失敗或沒有觸發「播放結束」，仍會讓重新開始按鈕出現
   clearTimeout(restartFallbackId);
   restartFallbackId = setTimeout(showRestart, 120000); // 最長 2 分鐘後一定出現
+  bgVideo.ontimeupdate = () => { // 快播完（剩 0.6 秒內）就先讓按鈕出現，不等「播放結束」事件
+    if (isFinite(bgVideo.duration) && bgVideo.duration - bgVideo.currentTime < 0.6) showRestart();
+  };
   bgVideo.onloadedmetadata = () => {
     if (isFinite(bgVideo.duration)) {
       clearTimeout(restartFallbackId);
