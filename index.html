@@ -495,6 +495,7 @@ let finalCountdownInterval = null;
 let pwInput = "";
 let storyStage = "idle"; // idle -> typing -> done
 let resetGuard = false;
+let restartFallbackId = null;
 
 /* ---------- SOS 提示藥水 ---------- */
 const SOS_SCHEDULE = [0, 0, 0]; // 挑戰一開始，三個提示藥水同時出現（原本：30秒 / 1分鐘 / 1分30秒）
@@ -870,6 +871,8 @@ function resetRoom() {
 
   switchBgVideo("witch-bg.mp4", true);
   bgVideo.onended = null;
+  bgVideo.onloadedmetadata = null;
+  clearTimeout(restartFallbackId);
   document.getElementById("restart-btn").classList.remove("show");
 
   timeLeft = ROOM.timeLimit;
@@ -1089,7 +1092,17 @@ function showEnd(success) {
   end.classList.toggle("fail", !success);
   stopBackgroundAudio();
   switchBgVideo(success ? "happy_end.mp4" : "bad_end.mp4", false);
-  bgVideo.onended = () => { restartBtn.classList.add("show"); };
+  const showRestart = () => restartBtn.classList.add("show");
+  bgVideo.onended = showRestart;
+  // 保險機制：萬一影片卡住、載入失敗或沒有觸發「播放結束」，仍會讓重新開始按鈕出現
+  clearTimeout(restartFallbackId);
+  restartFallbackId = setTimeout(showRestart, 120000); // 最長 2 分鐘後一定出現
+  bgVideo.onloadedmetadata = () => {
+    if (isFinite(bgVideo.duration)) {
+      clearTimeout(restartFallbackId);
+      restartFallbackId = setTimeout(showRestart, (bgVideo.duration + 3) * 1000); // 影片長度 + 3 秒
+    }
+  };
 }
 </script>
 </body>
