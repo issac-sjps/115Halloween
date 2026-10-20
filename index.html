@@ -33,6 +33,10 @@
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; z-index: 0; pointer-events: none;
   }
+  .bg-video.fit-contain {
+    object-fit: contain; /* 結局影片：完整顯示、縮小置中、不放大裁切 */
+    background: #000;
+  }
   #room-screen > *:not(.bg-video) { z-index: 1; }
   #end-screen { z-index: 3; }
 
@@ -667,6 +671,7 @@ function preloadAllEndings(force) {
 /* ---------- 切換背景影片（一般 / 過關 / 失敗）---------- */
 function switchBgVideo(file, loop) {
   bgVideo.loop = !!loop;
+  bgVideo.classList.toggle("fit-contain", !loop); // 結局影片(loop=false)才縮小置中，一般背景維持填滿
   bgVideo.muted = !!loop; // 一般背景影片靜音；過關/失敗影片播放聲音
   bgVideo.volume = Math.min(1, masterVolume);
   const titleImg = document.getElementById("site-title-img");
