@@ -870,6 +870,7 @@ function resetRoom() {
   clearSosPotions();
 
   switchBgVideo("witch-bg.mp4", true);
+  bgVideo.classList.add("fit-contain"); // 開始畫面（含說明）：縮小置中，才看得到旁邊的女巫
   bgVideo.onended = null;
   document.getElementById("restart-btn").classList.remove("show");
 
@@ -1003,6 +1004,7 @@ function beginCountdown() {
 /* ---------- 開始挑戰 ---------- */
 function startChallenge() {
   clearInterval(timerInterval);
+  bgVideo.classList.remove("fit-contain"); // 進入挑戰：背景恢復填滿
   document.getElementById("challenge-area").classList.remove("hidden");
   const clue = document.getElementById("color-clue");
   const info = COLOR_CODES[currentColor];
